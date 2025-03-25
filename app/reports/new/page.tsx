@@ -1,4 +1,4 @@
-import { submitProfileReportAction } from "../actions"  // The server action
+import { submitProfileReportAction } from "../../profiles/actions"  // The server action
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import ReportFormClient from "@/components/forms/new-client-report";

@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { hashIP } from "@/lib/utils/hasIp"
-import { getSteamIDsFromProfileUrl } from "@/lib/steam/steamApis"
+import {fetchSteamBans, fetchSteamUserSummary, getSteamIDsFromProfileUrl} from "@/lib/steam/steamApis"
 import { createClient } from "@/lib/utils/supabase/server"
+import {Suspect} from "@/lib/types/suspect";
 
 /**
  * Single server action that:
@@ -167,3 +168,125 @@ export async function submitEvidenceAction(
 
   return { success: true }
 }
+
+
+
+/**
+ * Server Action: fetch one or many "profiles" from DB,
+ * then enrich with Steam data, counts, and suspicious logic.
+ *
+ * If `id` is provided, returns a single suspect object.
+ * If `id` is omitted, returns an array of suspects.
+ */
+export async function fetchEnrichedSuspectsAction(args?: { id?: string }) {
+  const supabase = await createClient()
+
+  // 1) Base query from "profiles"
+  let query = supabase.from("profiles").select("*")
+  if (args?.id) {
+    query = query.eq("id", args.id).single()
+  }
+
+  const { data: result, error } = await query
+  if (error) {
+    console.error("fetchEnrichedSuspectsAction error:", error)
+    return { error: error.message }
+  }
+
+  // We'll unify single vs. multiple by wrapping single in an array
+  const profiles = Array.isArray(result) ? result : [result]
+
+  // 2) Enrich each profile
+  const enriched: Suspect[] = []
+  for (const profile of profiles) {
+    const suspect: Suspect = {
+      id: profile.id,
+      steam_id_64: profile.steam_id_64,
+      steam_id_32: profile.steam_id_32,
+      steam_url: profile.steam_url,
+      cheater: Boolean(profile.cheater),
+      created_at: profile.created_at,
+      updated_at: profile.updated_at,
+    }
+
+    // a) Count how many rows in "reports" reference this profile
+    let report_count = 0
+    {
+      const { error: reportErr, count } = await supabase
+          .from("reports")
+          .select("*", { count: "exact" })
+          .eq("profile_id", suspect.id)
+
+      if (reportErr) {
+        console.error("Failed to get report_count for", suspect.id, reportErr)
+      } else {
+        report_count = count ?? 0
+      }
+    }
+
+    // b) Count how many rows in "evidence" reference this profile
+    let evidence_count = 0
+    {
+      const { error: evidenceErr, count } = await supabase
+          .from("evidence")
+          .select("*", { count: "exact" })
+          .eq("profile_id", suspect.id)
+
+      if (evidenceErr) {
+        console.error("Failed to get evidence_count for", suspect.id, evidenceErr)
+      } else {
+        evidence_count = count ?? 0
+      }
+    }
+
+    // c) If steam_id_64 is present, fetch Steam name/avatar/bans
+    let steam_name = "Unknown"
+    let avatar_url = "/placeholder.svg?height=128&width=128"
+    let ban_status = false
+
+    if (suspect.steam_id_64) {
+      // Summaries
+      const summary = await fetchSteamUserSummary(suspect.steam_id_64)
+      if (summary) {
+        steam_name = summary.steam_name
+        avatar_url = summary.avatar_url
+      }
+      // Bans
+      const bans = await fetchSteamBans(suspect.steam_id_64)
+      if (bans?.ban_status) {
+        ban_status = true
+      }
+    }
+
+    // d) Build the final object
+    suspect.steam_name = steam_name
+    suspect.avatar_url = avatar_url
+    suspect.ban_status = ban_status
+    suspect.report_count = report_count
+    suspect.evidence_count = evidence_count
+
+    // e) Compute suspicious_score
+    //    If `cheater` => override to 999
+    let suspicious_score = 0
+    if (suspect.cheater) {
+      suspicious_score = 999
+    } else {
+      // example formula (report_count * 10) limited to 100
+      suspicious_score = Math.min(report_count * 10, 100)
+      // or incorporate ban_status => suspicious_score += ban_status ? 50 : 0
+    }
+    suspect.suspicious_score = suspicious_score
+
+    enriched.push(suspect)
+  }
+
+  // Optionally revalidate if you want
+  // revalidatePath("/somepath")
+
+  // 3) Return single or array
+  if (args?.id) {
+    return { data: enriched[0] }
+  }
+  return { data: enriched }
+}
+
