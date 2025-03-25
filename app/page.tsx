@@ -75,7 +75,7 @@ export default function Home() {
                 </CardContent>
                 <CardFooter>
                   <Button variant="ghost" asChild className="w-full">
-                    <Link href="/reports/new">
+                    <Link href="/reports/page/new">
                       Submit Report
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>

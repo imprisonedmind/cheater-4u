@@ -18,10 +18,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-      <html lang="en" suppressHydrationWarning className="dark">
+      <html lang="en" className="dark" suppressHydrationWarning>
       <body className={cn(inter.className, "min-h-screen bg-background text-foreground")}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
         {/* Navbar visible on every page */}
+        <div className={"h-12 w-full bg-green-500/30 flex items-center justify-center text-green-500"}>
+          under construction - advertise here
+        </div>
         <Navbar />
 
         {/* Main content container */}

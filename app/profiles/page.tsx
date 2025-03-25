@@ -1,20 +1,21 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/utils/supabase/server"
 import type { Suspect } from "@/lib/types/suspect"
 import { SuspectTable } from "@/components/table/suspect-table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Plus, Filter } from "lucide-react"
+import {SuspectCardGrid} from "@/components/card/suspect-card-grid";
 
-export default async function UsersPage() {
+export default async function ProfilesPage() {
   const supabase = await createClient()
   const { data: profiles, error } = await supabase.from("profiles").select(`
-      id,
-      steam_id_64,
-      steam_url,
-      reports (
-        id
-      )
-    `)
+    id,
+    steam_id_64,
+    steam_url,
+    reports (
+      id
+    )
+  `)
 
   if (error) throw new Error(error.message)
 
@@ -30,30 +31,28 @@ export default async function UsersPage() {
   }))
 
   return (
-      <main className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Reported Profiles</h1>
+          <div>
+            <h1 className="text-2xl font-bold">Profiles</h1>
+            <p className="text-muted-foreground">Browse and search reported player profiles</p>
+          </div>
           <div className="flex space-x-2">
             <Button variant="outline" size="sm">
               <Filter className="mr-2 h-4 w-4" />
               Filter
             </Button>
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Report
+            <Button size="sm" asChild>
+              <a href="/reports/page/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Report Player
+              </a>
             </Button>
           </div>
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Suspects Database</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SuspectTable suspects={suspects} />
-          </CardContent>
-        </Card>
-      </main>
+        <SuspectCardGrid suspects={suspects} />
+      </div>
   )
 }
 

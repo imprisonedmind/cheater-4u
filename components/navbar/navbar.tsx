@@ -1,33 +1,40 @@
-// components/ui/navbar.tsx
 "use client"
-// Navbar often needs interactivity (click handlers, links), so mark as client component
 
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { Search } from "lucide-react"
+import { UserNav } from "@/components/navbar/user-nav"
 
 export function Navbar() {
   return (
-      <header
-          className={cn(
-              "sticky top-0 z-50 w-full",
-              "bg-blue-700 text-white shadow-md"
-          )}
-      >
-        <nav className="flex items-center justify-between px-4 py-3">
-          <div className="font-bold text-lg">
-            <Link href="/">Cheater4U</Link>
-          </div>
-
-          <div className="space-x-4">
-            <Link href="/profiles" className="hover:text-blue-100">
-              Profiles
+      <header className={cn("sticky top-0 z-50 w-full", "border-b border-border bg-card/80 backdrop-blur-sm")}>
+        <div className="container flex h-14 items-center mx-auto">
+          <div className="mr-4 flex">
+            <Link href="/" className="mr-6 flex items-center space-x-2">
+              <span className="font-bold text-lg text-primary">Cheater4U</span>
             </Link>
-            <Link href="/reports" className="hover:text-blue-100">
-              Reports
-            </Link>
-            {/* Add more nav links or a user menu here */}
+            <nav className="flex items-center space-x-6 text-sm font-medium">
+              <Link href="/profiles" className="transition-colors hover:text-primary">
+                Profiles
+              </Link>
+              <Link href="/reports" className="transition-colors hover:text-primary">
+                Reports
+              </Link>
+            </nav>
           </div>
-        </nav>
+          <div className="ml-auto flex items-center space-x-4">
+            <div className="relative w-full max-w-[200px] md:max-w-[300px]">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                  type="search"
+                  placeholder="Search profiles..."
+                  className="w-full rounded-md border border-input bg-background py-2 pl-8 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+            <UserNav />
+          </div>
+        </div>
       </header>
   )
 }
+

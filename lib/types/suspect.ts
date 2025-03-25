@@ -10,5 +10,6 @@ export interface Suspect {
   steam_url: string | null
   avatar_url: string | null
   ban_status: boolean | null
+  suspicious_score: number
   report_count: number
 }
