@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { UserNav } from "@/components/navbar/user-nav";
 import type React from "react";
+import AdvertisementBar from "@/components/navbar/advertisement-bar";
 
 export function Navbar() {
   return (
@@ -14,13 +15,7 @@ export function Navbar() {
         "border-b border-border bg-card/80 backdrop-blur-sm z-[500]",
       )}
     >
-      <div
-        className={
-          "h-12 w-full bg-green-500/30 flex items-center justify-center text-green-500"
-        }
-      >
-        🚧 under construction / 💸 advertise here
-      </div>
+      <AdvertisementBar />
       <div className="container flex h-14 items-center mx-auto">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
