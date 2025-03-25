@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { isProd } from "@/lib/utils";
 
 type ReportProfile = {
   id: string;
@@ -57,12 +58,14 @@ export default async function ReportsPage() {
             View and manage reports of suspected cheaters
           </p>
         </div>
-        <Button asChild>
-          <Link href="/reports/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Report
-          </Link>
-        </Button>
+        {!isProd() && (
+          <Button asChild>
+            <Link href="/reports/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Report
+            </Link>
+          </Button>
+        )}
       </div>
 
       {!reports || reports.length === 0 ? (

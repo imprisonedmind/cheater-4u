@@ -24,6 +24,7 @@ import { ProfileHeader } from "@/components/profiles/profile-header";
 import { Evidence } from "@/lib/types/evidence";
 import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
 import { CustomReport } from "@/lib/types/report";
+import { isProd } from "@/lib/utils";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -57,7 +58,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <TabsTrigger value="evidence">
                 Evidence ({suspect.evidence_count})
               </TabsTrigger>
-              <TabsTrigger value="stats">Stats</TabsTrigger>
+              {/*TODO:// implement*/}
+              {/*<TabsTrigger value="stats">Stats</TabsTrigger>*/}
             </TabsList>
 
             {/* REPORTS */}
@@ -76,10 +78,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   <ReportsList reports={reports || []} />
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
-                    <Flag className="mr-2 h-4 w-4" />
-                    Submit New Report
-                  </Button>
+                  {!isProd() && (
+                    <Button variant="outline" className="w-full">
+                      <Flag className="mr-2 h-4 w-4" />
+                      Submit New Report
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             </TabsContent>
@@ -107,22 +111,23 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </TabsContent>
 
             {/* STATS */}
-            <TabsContent value="stats" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Clock className="mr-2 h-5 w-5 text-primary" />
-                    Player Statistics
-                  </CardTitle>
-                  <CardDescription>
-                    Game statistics and tracking data
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ProfileStats profileId={id} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/*TODO:// implement this*/}
+            {/*<TabsContent value="stats" className="mt-4">*/}
+            {/*  <Card>*/}
+            {/*    <CardHeader>*/}
+            {/*      <CardTitle className="flex items-center">*/}
+            {/*        <Clock className="mr-2 h-5 w-5 text-primary" />*/}
+            {/*        Player Statistics*/}
+            {/*      </CardTitle>*/}
+            {/*      <CardDescription>*/}
+            {/*        Game statistics and tracking data*/}
+            {/*      </CardDescription>*/}
+            {/*    </CardHeader>*/}
+            {/*    <CardContent>*/}
+            {/*      <ProfileStats profileId={id} />*/}
+            {/*    </CardContent>*/}
+            {/*  </Card>*/}
+            {/*</TabsContent>*/}
           </Tabs>
         </div>
 

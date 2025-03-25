@@ -59,17 +59,18 @@ export function EvidenceSection({ evidence, profileId }: EvidenceSectionProps) {
         ))
       )}
 
-      {!showAddForm ? (
-        <Button variant="outline" className="w-full">
-          Add Evidence
-        </Button>
-      ) : (
-        // TODO: rather use a shadcn modal to display this form here
-        <EvidenceForm
-          onSubmit={handleAddEvidence}
-          onCancel={() => setShowAddForm(false)}
-        />
-      )}
+      {/*  // TODO: rather use a shadcn modal to display this form here*/}
+      {/*{!showAddForm ? (*/}
+      {/*  <Button variant="outline" className="w-full">*/}
+      {/*    Add Evidence*/}
+      {/*  </Button>*/}
+      {/*) : (*/}
+
+      {/*  <EvidenceForm*/}
+      {/*    onSubmit={handleAddEvidence}*/}
+      {/*    onCancel={() => setShowAddForm(false)}*/}
+      {/*  />*/}
+      {/*)}*/}
     </div>
   );
 }
