@@ -1,5 +1,6 @@
 // lib/steamApi.ts
-import { STEAM32_OFFSET } from "@/lib/constants"; // define offset somewhere
+import { STEAM32_OFFSET } from "@/lib/constants";
+
 const apiKey = process.env.STEAM_API_KEY; // or process.env.STEAM_API_KEY
 
 /**

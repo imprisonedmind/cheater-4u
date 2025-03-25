@@ -213,103 +213,63 @@ export async function fetchEnrichedSuspectsAction(args?: { id?: string }) {
   // We'll unify single vs. multiple by wrapping single in an array
   const profiles = Array.isArray(result) ? result : [result];
 
-  // 2) Enrich each profile
-  const enriched: Suspect[] = [];
-  for (const profile of profiles) {
-    const suspect: Suspect = {
-      id: profile.id,
-      steam_id_64: profile.steam_id_64,
-      steam_id_32: profile.steam_id_32,
-      steam_url: profile.steam_url,
-      cheater: Boolean(profile.cheater),
-      created_at: profile.created_at,
-      updated_at: profile.updated_at,
-      related_profiles: profile.related_profiles,
-    };
+  // 2) Use Promise.all for concurrent enrichment
+  const enriched: Suspect[] = await Promise.all(
+    profiles.map(async (profile) => {
+      const suspect: Suspect = {
+        id: profile.id,
+        steam_id_64: profile.steam_id_64,
+        steam_id_32: profile.steam_id_32,
+        steam_url: profile.steam_url,
+        cheater: Boolean(profile.cheater),
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        related_profiles: profile.related_profiles,
+      };
 
-    // a) Count how many rows in "reports" reference this profile
-    let report_count = 0;
-    {
-      const { error: reportErr, count } = await supabase
-        .from("reports")
-        .select("*", { count: "exact" })
-        .eq("profile_id", suspect.id);
+      // Concurrent queries
+      const [{ report_count, evidence_count }, steamSummary, steamBans] =
+        await Promise.all([
+          // Count reports and evidence concurrently
+          Promise.all([
+            supabase
+              .from("reports")
+              .select("*", { count: "exact" })
+              .eq("profile_id", suspect.id),
+            supabase
+              .from("evidence")
+              .select("*", { count: "exact" })
+              .eq("profile_id", suspect.id),
+          ]).then(([reportResult, evidenceResult]) => ({
+            report_count: reportResult.count ?? 0,
+            evidence_count: evidenceResult.count ?? 0,
+          })),
 
-      if (reportErr) {
-        console.error("Failed to get report_count for", suspect.id, reportErr);
-      } else {
-        report_count = count ?? 0;
-      }
-    }
+          // Steam API calls (using cached versions)
+          suspect.steam_id_64
+            ? fetchSteamUserSummary(suspect.steam_id_64)
+            : null,
+          suspect.steam_id_64 ? fetchSteamBans(suspect.steam_id_64) : null,
+        ]);
 
-    // b) Count how many rows in "evidence" reference this profile
-    let evidence_count = 0;
-    {
-      const { error: evidenceErr, count } = await supabase
-        .from("evidence")
-        .select("*", { count: "exact" })
-        .eq("profile_id", suspect.id);
+      // Populate enriched data
+      return {
+        ...suspect,
+        steam_name: steamSummary?.steam_name ?? "Unknown",
+        avatar_url:
+          steamSummary?.avatar_url ?? "/placeholder.svg?height=128&width=128",
+        ban_status: steamBans?.ban_status ?? false,
+        report_count,
+        evidence_count,
+        suspicious_score: suspect.cheater
+          ? 999
+          : Math.min(report_count * 10, 100),
+      };
+    }),
+  );
 
-      if (evidenceErr) {
-        console.error(
-          "Failed to get evidence_count for",
-          suspect.id,
-          evidenceErr,
-        );
-      } else {
-        evidence_count = count ?? 0;
-      }
-    }
-
-    // c) If steam_id_64 is present, fetch Steam name/avatar/bans
-    let steam_name = "Unknown";
-    let avatar_url = "/placeholder.svg?height=128&width=128";
-    let ban_status = false;
-
-    if (suspect.steam_id_64) {
-      // Summaries
-      const summary = await fetchSteamUserSummary(suspect.steam_id_64);
-      if (summary) {
-        steam_name = summary.steam_name;
-        avatar_url = summary.avatar_url;
-      }
-      // Bans
-      const bans = await fetchSteamBans(suspect.steam_id_64);
-      if (bans?.ban_status) {
-        ban_status = true;
-      }
-    }
-
-    // d) Build the final object
-    suspect.steam_name = steam_name;
-    suspect.avatar_url = avatar_url;
-    suspect.ban_status = ban_status;
-    suspect.report_count = report_count;
-    suspect.evidence_count = evidence_count;
-
-    // e) Compute suspicious_score
-    //    If `cheater` => override to 999
-    let suspicious_score = 0;
-    if (suspect.cheater) {
-      suspicious_score = 999;
-    } else {
-      // example formula (report_count * 10) limited to 100
-      suspicious_score = Math.min(report_count * 10, 100);
-      // or incorporate ban_status => suspicious_score += ban_status ? 50 : 0
-    }
-    suspect.suspicious_score = suspicious_score;
-
-    enriched.push(suspect);
-  }
-
-  // Optionally revalidate if you want
-  // revalidatePath("/somepath")
-
-  // 3) Return single or array
-  if (args?.id) {
-    return { data: enriched[0] };
-  }
-  return { data: enriched };
+  // Return single or array based on input
+  return args?.id ? { data: enriched[0] } : { data: enriched };
 }
 
 /**
