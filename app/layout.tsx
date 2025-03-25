@@ -32,13 +32,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {/* Navbar visible on every page */}
-          <div
-            className={
-              "h-12 w-full bg-green-500/30 flex items-center justify-center text-green-500"
-            }
-          >
-            🚧 under construction / 💸 advertise here
-          </div>
           <Navbar />
 
           {/* Main content container */}

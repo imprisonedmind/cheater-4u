@@ -6,10 +6,15 @@ import {
   fetchSteamBans,
   fetchSteamUserSummary,
   getSteamIDsFromProfileUrl,
+  resolveVanityURL,
 } from "@/lib/steam/steamApis";
 import { createClient } from "@/lib/utils/supabase/server";
 import { Suspect } from "@/lib/types/suspect";
 import { Evidence } from "@/lib/types/evidence";
+import {
+  RelatedProfileData,
+  RelatedProfileIdentifier,
+} from "@/lib/types/related_profiles";
 
 /**
  * Single server action that:
@@ -212,6 +217,7 @@ export async function fetchEnrichedSuspectsAction(args?: { id?: string }) {
       cheater: Boolean(profile.cheater),
       created_at: profile.created_at,
       updated_at: profile.updated_at,
+      related_profiles: profile.related_profiles,
     };
 
     // a) Count how many rows in "reports" reference this profile
@@ -335,4 +341,68 @@ export async function fetchReportsForUser(userId: string): Promise<Report[]> {
   }
 
   return data ?? [];
+}
+
+/**
+ * Fetches related profile data for each identifier.
+ * - If identifier.profile_id exists, we fetch data from our internal "profiles" table.
+ * - Otherwise, if identifier.steam_id_64 exists, we fetch Steam data using our Steam API helper.
+ */
+
+export async function fetchRelatedProfilesData(
+  relatedProfiles: RelatedProfileIdentifier[],
+): Promise<RelatedProfileData[]> {
+  const results: RelatedProfileData[] = [];
+  const supabase = createClient();
+
+  for (const identifier of relatedProfiles) {
+    if (identifier.profile_id) {
+      // Fetch internal profile details from our DB.
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("avatar_url, name")
+        .eq("id", identifier.profile_id)
+        .single();
+
+      if (error || !data) {
+        console.error("Error fetching internal profile data:", error);
+        continue;
+      }
+      results.push({
+        avatar_url: data.avatar_url,
+        name: data.name,
+        link: `/profiles/${identifier.profile_id}`,
+      });
+    } else if (identifier.steam_id_64) {
+      // Fetch Steam summary using the provided 64-bit ID.
+      try {
+        const summary = await fetchSteamUserSummary(identifier.steam_id_64);
+        if (summary) {
+          results.push({
+            avatar_url: summary.avatar_url,
+            name: summary.steam_name,
+            link: `https://steamcommunity.com/profiles/${identifier.steam_id_64}`,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching Steam data for steam_id_64:", error);
+      }
+    } else if (identifier.steam_id) {
+      // Resolve vanity (custom) Steam ID then fetch summary.
+      try {
+        const resolvedSteamId64 = await resolveVanityURL(identifier.steam_id);
+        const summary = await fetchSteamUserSummary(resolvedSteamId64);
+        if (summary) {
+          results.push({
+            avatar_url: summary.avatar_url,
+            name: summary.steam_name,
+            link: `https://steamcommunity.com/profiles/${resolvedSteamId64}`,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching Steam data for vanity ID:", error);
+      }
+    }
+  }
+  return results;
 }

@@ -12,7 +12,6 @@ import { ReportsList } from "@/components/reports/reports-list";
 import { ProfileStats } from "@/components/profiles/profile-stats";
 import { AlertTriangle, Clock, Flag } from "lucide-react";
 import { CheaterStatusBar } from "@/components/profiles/cheater-status-bar";
-import { RelatedProfilesCard } from "@/components/profiles/related-profiles-card";
 import { SteamProfileCard } from "@/components/profiles/steam-profile-card";
 import { EvidenceSection } from "@/components/evidence/evidence-section";
 import {
@@ -23,6 +22,7 @@ import {
 import { Suspect } from "@/lib/types/suspect";
 import { ProfileHeader } from "@/components/profiles/profile-header";
 import { Evidence } from "@/lib/types/evidence";
+import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -150,7 +150,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </CardContent>
           </Card>
 
-          <RelatedProfilesCard />
+          <RelatedProfilesCard relatedProfiles={suspect.related_profiles} />
         </div>
       </div>
     </div>
