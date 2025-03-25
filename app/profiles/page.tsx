@@ -3,6 +3,7 @@ import { Filter, Plus } from "lucide-react";
 import { SuspectCardGrid } from "@/components/card/suspect-card-grid";
 import { fetchEnrichedSuspectsAction } from "@/app/profiles/actions";
 import { Suspect } from "@/lib/types/suspect";
+import { isProd } from "@/lib/utils";
 
 export default async function ProfilesPage() {
   const { data } = await fetchEnrichedSuspectsAction();
@@ -22,12 +23,14 @@ export default async function ProfilesPage() {
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button>
-          <Button size="sm" asChild>
-            <a href="/reports/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Report Player
-            </a>
-          </Button>
+          {!isProd() && (
+            <Button size="sm" asChild>
+              <a href="/reports/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Report Player
+              </a>
+            </Button>
+          )}
         </div>
       </div>
 
