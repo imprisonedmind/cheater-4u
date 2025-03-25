@@ -1,4 +1,4 @@
-export type Report = {
+export type CustomReport = {
   id: string;
   profile_id: string;
   user_id: string;

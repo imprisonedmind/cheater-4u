@@ -33,7 +33,7 @@ export const EvidenceItem = ({ evidence, onVote }: EvidenceItemProps) => {
 
       <div className="mt-2">
         <a
-          href={evidence.evidence_url}
+          href={evidence.evidence_url ?? ""}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center text-primary hover:underline text-xs"

@@ -23,9 +23,9 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {suspects.map((suspect) => {
         const badge = getStatusBadge({
-          isCheater: suspect.cheater,
-          ban_status: suspect.ban_status,
-          suspicious_score: suspect.suspicious_score,
+          isCheater: suspect.cheater ?? false,
+          ban_status: suspect.ban_status ?? false,
+          suspicious_score: suspect.suspicious_score ?? 0,
         });
 
         // 1) Decide final suspicious_score
@@ -60,9 +60,9 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
             <div className={`relative h-24 w-full `}>
               <StatusBackground
                 height={"h-full"}
-                isCheater={suspect.cheater}
-                ban_status={suspect.ban_status}
-                suspicious_score={suspect.suspicious_score}
+                isCheater={suspect.cheater ?? false}
+                ban_status={suspect.ban_status ?? false}
+                suspicious_score={suspect.suspicious_score ?? 0}
               />
             </div>
 

@@ -2,21 +2,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
 import { EvidenceForm } from "@/components/forms/evidence-form";
 import { EvidenceItem } from "@/components/evidence/evidence-item";
 import { Button } from "@/components/ui/button";
-
-interface Evidence {
-  id: string;
-  evidence_type: string;
-  evidence_url: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  upvotes: number;
-  downvotes: number;
-}
+import { Evidence } from "@/lib/types/evidence";
 
 interface EvidenceSectionProps {
   evidence: Evidence[];
@@ -33,9 +22,9 @@ export function EvidenceSection({ evidence, profileId }: EvidenceSectionProps) {
         item.id === evidenceId
           ? {
               ...item,
-              upvotes: voteType === "up" ? item.upvotes + 1 : item.upvotes,
-              downvotes:
-                voteType === "down" ? item.downvotes + 1 : item.downvotes,
+              up_votes: voteType === "up" ? item.up_votes + 1 : item.up_votes,
+              down_votes:
+                voteType === "down" ? item.down_votes + 1 : item.down_votes,
             }
           : item,
       ),
@@ -49,9 +38,9 @@ export function EvidenceSection({ evidence, profileId }: EvidenceSectionProps) {
       evidence_url: url,
       content: description,
       created_at: new Date().toISOString(),
-      user_id: "current-user",
-      upvotes: 0,
-      downvotes: 0,
+      profile_id: "current-user",
+      up_votes: 0,
+      down_votes: 0,
     };
 
     setLocalEvidence((prev) => [newEvidence, ...prev]);

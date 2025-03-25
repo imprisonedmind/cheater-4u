@@ -23,6 +23,7 @@ import { Suspect } from "@/lib/types/suspect";
 import { ProfileHeader } from "@/components/profiles/profile-header";
 import { Evidence } from "@/lib/types/evidence";
 import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
+import { CustomReport } from "@/lib/types/report";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -36,10 +37,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const suspect = data as Suspect;
 
   const e = await fetchEvidenceForProfile(suspect.id);
-  const evidence = e as Evidence[];
+  const evidence = e as unknown as Evidence[];
 
   const r = await fetchReportsForUser(suspect.id);
-  const reports = r as Report[];
+  const reports = r as unknown as CustomReport[];
 
   return (
     <div className="space-y-6">
@@ -132,9 +133,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             steam_id_32={suspect.steam_id_32}
             steam_url={suspect.steam_url}
             firstReported={suspect.created_at}
-            banStatus={suspect.ban_status}
-            suspiciousScore={suspect.suspicious_score}
-            cheater={suspect.cheater}
+            banStatus={suspect.ban_status ?? false}
+            suspiciousScore={suspect.suspicious_score ?? 0}
+            cheater={suspect.cheater ?? false}
           />
 
           {/* “Cheater status bar” or suspicious bar, if desired in a card */}
@@ -146,11 +147,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CheaterStatusBar suspiciousScore={suspect.suspicious_score} />
+              <CheaterStatusBar
+                suspiciousScore={suspect.suspicious_score ?? 0}
+              />
             </CardContent>
           </Card>
 
-          <RelatedProfilesCard relatedProfiles={suspect.related_profiles} />
+          {suspect.related_profiles != null && (
+            <RelatedProfilesCard relatedProfiles={suspect.related_profiles} />
+          )}
         </div>
       </div>
     </div>

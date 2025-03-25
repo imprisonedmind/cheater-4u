@@ -79,7 +79,7 @@ const getStreamableEmbedUrl = (url: string): string | null => {
  */
 export const EvidenceThumbnail = ({ evidence }: { evidence: Evidence }) => {
   if (evidence.evidence_type === "video") {
-    const youtubeEmbed = getYoutubeEmbedUrl(evidence.evidence_url);
+    const youtubeEmbed = getYoutubeEmbedUrl(evidence.evidence_url ?? "");
     if (youtubeEmbed) {
       return (
         <div className="relative aspect-video bg-black rounded-md overflow-hidden">
@@ -102,7 +102,7 @@ export const EvidenceThumbnail = ({ evidence }: { evidence: Evidence }) => {
       );
     }
 
-    const allstarData = getAllstarClipData(evidence.evidence_url);
+    const allstarData = getAllstarClipData(evidence.evidence_url ?? "");
     if (allstarData) {
       return (
         <div className="relative aspect-video bg-black rounded-md overflow-hidden">
@@ -125,7 +125,7 @@ export const EvidenceThumbnail = ({ evidence }: { evidence: Evidence }) => {
       );
     }
 
-    const twitterEmbed = getTwitterEmbedUrl(evidence.evidence_url);
+    const twitterEmbed = getTwitterEmbedUrl(evidence.evidence_url ?? "");
     if (twitterEmbed) {
       return (
         <div className="relative aspect-video bg-black rounded-md overflow-hidden">
@@ -148,7 +148,7 @@ export const EvidenceThumbnail = ({ evidence }: { evidence: Evidence }) => {
       );
     }
 
-    const streamableEmbed = getStreamableEmbedUrl(evidence.evidence_url);
+    const streamableEmbed = getStreamableEmbedUrl(evidence.evidence_url ?? "");
     if (streamableEmbed) {
       return (
         <div className="relative aspect-video bg-black rounded-md overflow-hidden">
@@ -173,15 +173,23 @@ export const EvidenceThumbnail = ({ evidence }: { evidence: Evidence }) => {
 
     // Fallback: if no embed URL is determined, show a generic thumbnail image.
     return (
-      <a href={evidence.evidence_url} target="_blank" rel="noopener noreferrer">
+      <a
+        href={evidence.evidence_url ?? ""}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <img src="/png/mp4.png" alt="Video thumbnail" className="rounded-md" />
       </a>
     );
   } else if (evidence.evidence_type === "screenshot") {
     return (
-      <a href={evidence.evidence_url} target="_blank" rel="noopener noreferrer">
+      <a
+        href={evidence.evidence_url ?? ""}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <img
-          src={evidence.evidence_url}
+          src={evidence.evidence_url ?? "/png/mp4.png"}
           alt="Image evidence"
           className="rounded-md"
         />

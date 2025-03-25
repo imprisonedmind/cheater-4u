@@ -2,14 +2,14 @@ import { RelatedProfileIdentifier } from "@/lib/types/related_profiles";
 
 export interface Suspect {
   id: string;
-  steam_id_64?: string;
-  steam_id_32?: string;
-  steam_url?: string;
-  related_profiles?: RelatedProfileIdentifier;
+  steam_id_64: string;
+  steam_id_32: string;
+  steam_url: string;
+  created_at?: string;
 
   // Columns that might be in your DB
+  related_profiles?: RelatedProfileIdentifier[];
   cheater?: boolean;
-  created_at?: string;
   updated_at?: string;
 
   // Enriched fields:

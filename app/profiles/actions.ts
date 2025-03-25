@@ -15,6 +15,7 @@ import {
   RelatedProfileData,
   RelatedProfileIdentifier,
 } from "@/lib/types/related_profiles";
+import { redirect } from "next/navigation";
 
 /**
  * Single server action that:
@@ -93,12 +94,10 @@ export async function submitProfileReportAction(formData: FormData) {
     }
 
     // 6) Revalidate path(s) if needed
-    revalidatePath("/reports");
-
-    return { success: true };
+    redirect(`/profiles/${profileId}`);
   } catch (err: any) {
     console.error("submitProfileReportAction error:", err);
-    return { error: err.message ?? "Unknown error" };
+    throw new Error(err.message ?? "Unknown error");
   }
 }
 
@@ -192,10 +191,9 @@ export async function fetchEnrichedSuspectsAction(args?: { id?: string }) {
   const supabase = await createClient();
 
   // 1) Base query from "profiles"
-  let query = supabase.from("profiles").select("*");
-  if (args?.id) {
-    query = query.eq("id", args.id).single();
-  }
+  const query = args?.id
+    ? supabase.from("profiles").select("*").eq("id", args.id).single()
+    : supabase.from("profiles").select("*");
 
   const { data: result, error } = await query;
   if (error) {
@@ -353,7 +351,7 @@ export async function fetchRelatedProfilesData(
   relatedProfiles: RelatedProfileIdentifier[],
 ): Promise<RelatedProfileData[]> {
   const results: RelatedProfileData[] = [];
-  const supabase = createClient();
+  const supabase = await createClient();
 
   for (const identifier of relatedProfiles) {
     if (identifier.profile_id) {
