@@ -1,22 +1,22 @@
-import {Badge} from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 
 export function getStatusBadge({
-                                 isCheater,
-                                 ban_status,
-                                 suspicious_score,
-                               }: {
-  isCheater: boolean
-  ban_status: boolean
-  suspicious_score: number
+  isCheater,
+  ban_status,
+  suspicious_score,
+}: {
+  isCheater: boolean;
+  ban_status: boolean;
+  suspicious_score: number;
 }) {
   if (isCheater) {
-    return <Badge variant="destructive">Cheater</Badge>
+    return <Badge variant="warning">Cheater</Badge>;
   }
   if (ban_status) {
-    return <Badge variant="destructive">Banned</Badge>
+    return <Badge variant="banned">Banned</Badge>;
   }
   if (suspicious_score >= 70) {
-    return <Badge variant="outline">Suspicious</Badge>
+    return <Badge variant="outline">Suspicious</Badge>;
   }
-  return <Badge variant="secondary">Active</Badge>
+  return <Badge variant="secondary">Active</Badge>;
 }

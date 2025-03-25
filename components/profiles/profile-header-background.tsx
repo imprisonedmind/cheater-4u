@@ -18,9 +18,9 @@ export function StatusBackground({
   // 1) Decide gradient classes
   let gradientClasses = "";
   if (isCheater) {
-    gradientClasses = "bg-gradient-to-t from-red-800 to-red-500/30";
+    gradientClasses = "bg-gradient-to-t from-orange-800 to-orange-500/30";
   } else if (ban_status) {
-    gradientClasses = "bg-gradient-to-t from-red-700 to-orange-600";
+    gradientClasses = "bg-gradient-to-t from-red-800 to-red-500/30";
   } else if (suspicious_score >= 70) {
     gradientClasses = "bg-gradient-to-t from-orange-600 to-yellow-500";
   } else {
@@ -34,8 +34,7 @@ export function StatusBackground({
   if (isCheater) {
     patternClass = "bg-[url('/svgs/cheater.svg')]";
   } else if (ban_status) {
-    // Use the "banned-shape" from tailwind.config.js
-    patternClass = "bg-[url('/svgs/cheater.svg')]";
+    patternClass = "bg-[url('/svgs/banned.svg')]";
   } else if (suspicious_score >= 70) {
     patternClass = "bg-[url('/patterns/topography.svg')]";
   } else {

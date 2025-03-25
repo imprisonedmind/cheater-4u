@@ -3,52 +3,50 @@ import { STEAM32_OFFSET } from "@/lib/constants"; // define offset somewhere
 const apiKey = process.env.STEAM_API_KEY; // or process.env.STEAM_API_KEY
 
 /**
- * Attempt to extract a 64-bit Steam ID from a URL.
- * - If the URL is a "profiles/7656119..." link, we parse out the numeric portion directly.
+ * Attempt to extract a 64-bit Steam ID from a URL *and* verify that the URL is actually accessible.
+ * - If the URL is a "profiles/7656119..." link, parse out the numeric portion directly.
  * - If the URL is an "id/someVanity" link, we call Steam's ResolveVanityURL to get the real ID.
+ * - If the URL is unreachable, throw an error immediately.
  *
  * Returns { steam_id_64, steam_id_32 }, or throws an error if we cannot resolve.
  */
 export async function getSteamIDsFromProfileUrl(
   steamProfileUrl: string,
-): Promise<{
-  steam_id_64: string;
-  steam_id_32: string;
-}> {
-  // Clean up whitespace, etc.
-  const url = steamProfileUrl.trim().toLowerCase();
+): Promise<{ steam_id_64: string; steam_id_32: string }> {
+  const url = steamProfileUrl.trim();
 
-  if (!url.startsWith("http")) {
-    throw new Error("Invalid Steam URL provided.");
+  if (!url.toLowerCase().startsWith("http")) {
+    throw new Error("Invalid Steam URL provided (must start with http/https).");
   }
 
-  // Some quick pattern checks:
-  // 1. Numeric "profiles" link: https://steamcommunity.com/profiles/7656119xxxx
-  const profilesMatch = url.match(/steamcommunity\.com\/profiles\/(\d+)/);
+  // 1. Check URL accessibility
+  const res = await fetch(url, { method: "HEAD" });
+  if (!res.ok) {
+    throw new Error("Provided Steam Profile URL is not accessible.");
+  }
+
+  const lowerUrl = url.toLowerCase();
+
+  // 2. Direct numeric URL parsing
+  const profilesMatch = lowerUrl.match(/steamcommunity\.com\/profiles\/(\d+)/);
   if (profilesMatch) {
-    const steam64 = profilesMatch[1]; // the numeric portion
+    const steam64 = profilesMatch[1];
     const steam32 = convert64to32(steam64);
-    return {
-      steam_id_64: steam64,
-      steam_id_32: steam32,
-    };
+    return { steam_id_64: steam64, steam_id_32: steam32 };
   }
 
-  // 2. Vanity "id" link: https://steamcommunity.com/id/vanityName
-  const vanityMatch = url.match(/steamcommunity\.com\/id\/([^/]+)/);
+  // 3. Vanity URL resolution via Steam API
+  const vanityMatch = lowerUrl.match(/steamcommunity\.com\/id\/([^/]+)/);
   if (vanityMatch) {
     const vanityName = vanityMatch[1];
-    // Call Steam API to resolve
-    const steam64 = await resolveVanityURL(vanityName);
+    const steam64 = await resolveVanityURL(vanityName); // should throw on failure
+    if (!steam64) {
+      throw new Error("Steam API did not return a valid Steam ID.");
+    }
     const steam32 = convert64to32(steam64);
-    return {
-      steam_id_64: steam64,
-      steam_id_32: steam32,
-    };
+    return { steam_id_64: steam64, steam_id_32: steam32 };
   }
 
-  // If neither matched, user might have some other pattern or a custom domain.
-  // In real-world usage, you might have more logic or fallback.
   throw new Error("Unable to parse Steam ID from URL. Unsupported format.");
 }
 
@@ -66,23 +64,17 @@ function convert64to32(steam64: string): string {
  * Call Steam's ResolveVanityURL endpoint to convert a vanity name into a 64-bit ID.
  * https://partner.steamgames.com/doc/webapi/ISteamUser#ResolveVanityURL
  */
-export async function resolveVanityURL(vanity: string): Promise<string> {
-  if (!apiKey) {
-    throw new Error("Missing STEAM_API_KEY environment variable.");
-  }
-
-  const url = `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${apiKey}&vanityurl=${vanity}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to call Steam vanity API: ${res.statusText}`);
-  }
-
+export async function resolveVanityURL(vanityName: string): Promise<string> {
+  const apiKey = process.env.STEAM_API_KEY;
+  const res = await fetch(
+    `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${apiKey}&vanityurl=${vanityName}`,
+  );
   const data = await res.json();
-  // data.response.success == 1 means success
-  // data.response.steamid is the 64-bit ID
-  if (data?.response?.success !== 1 || !data.response.steamid) {
-    throw new Error(`Vanity resolve failed. Response: ${JSON.stringify(data)}`);
+
+  if (!res.ok || data.response.success !== 1) {
+    throw new Error("Steam API failed to resolve vanity URL.");
   }
+
   return data.response.steamid;
 }
 

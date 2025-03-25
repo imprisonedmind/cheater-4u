@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,9 +32,9 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <Toaster theme={"dark"} />
           {/* Navbar visible on every page */}
           <Navbar />
-
           {/* Main content container */}
           <div className="container mx-auto py-8">{children}</div>
         </ThemeProvider>

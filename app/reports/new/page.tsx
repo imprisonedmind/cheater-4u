@@ -1,4 +1,7 @@
-import { submitProfileReportAction } from "../../profiles/actions"; // The server action
+"use client";
+import { submitProfileReportAction } from "../../profiles/actions";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,10 +10,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import ReportFormClient from "@/components/forms/new-client-report";
 
 export default function NewReportPage() {
+  async function onSubmit(formData: FormData) {
+    try {
+      await submitProfileReportAction(formData);
+      toast.success("Report submitted successfully!");
+    } catch (err: any) {
+      // If the error is a redirect error, let Next.js handle it without showing a toast
+      if (err?.digest === "NEXT_REDIRECT") return;
+      toast.error("Submission failed.");
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
@@ -29,15 +42,15 @@ export default function NewReportPage() {
         </CardHeader>
 
         <CardContent>
-          {/*
-            The form uses server actions via action={submitProfileReportAction}.
-            Our dynamic fields (tabs, etc.) are inside a client component, but
-            still have name="..." so they get submitted with this form.
-          */}
-          <form action={submitProfileReportAction}>
-            {/* Our client-side tabbed UI goes here */}
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault(); // prevent full page reload
+              const form = e.currentTarget;
+              const formData = new FormData(form);
+              await onSubmit(formData);
+            }}
+          >
             <ReportFormClient />
-
             <CardFooter className="flex justify-between px-0 mt-6">
               <Button variant="outline" type="reset">
                 Cancel

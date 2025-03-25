@@ -8,6 +8,7 @@ import Link from "next/link";
 import { SteamAvatar } from "@/components/avatar/reusable-avatar";
 import { StatusBackground } from "@/components/profiles/profile-header-background";
 import { getStatusBadge } from "@/components/badge/status-badge";
+import { CheaterStatusBar } from "@/components/profiles/cheater-status-bar";
 
 /**
  * Matches the "CS skin card" look with:
@@ -31,18 +32,8 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
         // 1) Decide final suspicious_score
         //    If "cheater" is true, override to 999 to indicate forced CHEATER
         let suspicious_score = suspect.suspicious_score ?? 0;
-        if (suspect.cheater) {
+        if (suspect.cheater || suspect.ban_status) {
           suspicious_score = 999;
-        }
-
-        // 3) Suspicious bar color
-        let scoreColor = "bg-success"; // green
-        if (suspicious_score >= 85) {
-          scoreColor = "bg-destructive"; // red
-        } else if (suspicious_score >= 70) {
-          scoreColor = "bg-orange-500";
-        } else if (suspicious_score >= 50) {
-          scoreColor = "bg-yellow-500";
         }
 
         return (
@@ -96,25 +87,11 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
               </div>
 
               {/* “Account Standing” bar */}
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Account Standing</span>
-                  {/* If suspicious_score=999 => label as 100? Or 'CHEATER'? */}
-                  <span>{suspicious_score}%</span>
-                </div>
-                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                  {suspicious_score >= 999 ? (
-                    // Force bar to 100% red if cheater
-                    <div className="h-full bg-red-700 transition-all w-full" />
-                  ) : (
-                    <div
-                      className={`h-full ${scoreColor} transition-all`}
-                      style={{ width: `${suspicious_score}%` }}
-                    />
-                  )}
-                </div>
-              </div>
-
+              <CheaterStatusBar
+                suspiciousScore={suspicious_score}
+                cheater={suspect.cheater}
+                ban_status={suspect.ban_status}
+              />
               {/* Bottom-right icons */}
               <div className="flex justify-between space-x-2 pt-2">
                 {badge}

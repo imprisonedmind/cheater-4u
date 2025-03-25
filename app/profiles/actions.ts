@@ -27,37 +27,38 @@ export async function submitProfileReportAction(formData: FormData) {
   try {
     const supabase = await createClient();
 
-    // 1) Basic fields
     const steamUrl = formData.get("steam_url")?.toString() ?? "";
-    // (Potentially other top-level fields if needed)
+    if (!steamUrl) throw new Error("Missing Steam URL");
 
-    // 2) Resolve steam IDs
+    // 🚨 This line throws immediately if resolution fails
     const { steam_id_64, steam_id_32 } =
       await getSteamIDsFromProfileUrl(steamUrl);
 
-    // 3) Upsert into profiles
+    // Additional validation: Check if the Steam profile exists and is fetchable
+    const steamSummary = await fetchSteamUserSummary(steam_id_64);
+    if (!steamSummary) {
+      throw new Error("Steam profile not found or is private");
+    }
+
     const { data: upsertedProfile, error: profileError } = await supabase
       .from("profiles")
       .upsert(
         {
           steam_id_64,
           steam_id_32,
-          steam_url: steamUrl,
+          steam_url: `https://steamcommunity.com/profiles/${steam_id_64}`,
         },
-        {
-          onConflict: "steam_id_64",
-          ignoreDuplicates: true,
-        },
+        { onConflict: "steam_id_64", ignoreDuplicates: true },
       )
       .select()
       .single();
 
     let profileId: string | undefined;
+
     if (!upsertedProfile && !profileError) {
-      // conflict => fetch existing
       const { data: existingProfile } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id")
         .eq("steam_id_64", steam_id_64)
         .single();
       profileId = existingProfile?.id;
@@ -66,12 +67,8 @@ export async function submitProfileReportAction(formData: FormData) {
       profileId = upsertedProfile?.id;
     }
 
-    if (!profileId) {
-      throw new Error("Could not upsert profile.");
-    }
+    if (!profileId) throw new Error("Could not upsert profile.");
 
-    // 4) Insert into reports (hash IP).
-    //    With server actions, we can't easily read real IP, so we do a placeholder:
     const fakeIp = "0.0.0.0";
     const hashedIp = await hashIP(fakeIp);
 
@@ -79,25 +76,32 @@ export async function submitProfileReportAction(formData: FormData) {
       profile_id: profileId,
       reporter_ip_hash: hashedIp,
     });
-    if (reportError) {
-      throw reportError;
+
+    if (reportError) throw reportError;
+
+    const hasEvidence =
+      formData.get("evidence_type") ||
+      formData.get("evidence_url") ||
+      formData.get("comments") ||
+      formData.get("leetify_link") ||
+      formData.get("video_url");
+
+    if (hasEvidence) {
+      const evidenceResult = await submitEvidenceAction(formData, {
+        profileId,
+        steam_id_64,
+      });
+
+      if (!evidenceResult.success) {
+        throw new Error(evidenceResult.error ?? "Failed to insert evidence");
+      }
     }
 
-    // 5) Insert evidence by calling the standalone action
-    //    (We pass `formData` and the IDs we just derived.)
-    const evidenceResult = await submitEvidenceAction(formData, {
-      profileId,
-      steam_id_64,
-    });
-    if (!evidenceResult.success) {
-      throw new Error(evidenceResult.error ?? "Failed to insert evidence");
-    }
-
-    // 6) Revalidate path(s) if needed
     redirect(`/profiles/${profileId}`);
   } catch (err: any) {
-    console.error("submitProfileReportAction error:", err);
-    throw new Error(err.message ?? "Unknown error");
+    if (err?.digest === "NEXT_REDIRECT") throw err;
+    console.error("[submitProfileReportAction]", err);
+    throw new Error(err.message ?? "Something went wrong");
   }
 }
 
