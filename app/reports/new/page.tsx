@@ -11,16 +11,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import ReportFormClient from "@/components/forms/new-client-report";
+import { useRouter } from "next/navigation"; // Correct import
 
 export default function NewReportPage() {
+  const router = useRouter(); // Use the correct router hook
+
   async function onSubmit(formData: FormData) {
     try {
-      await submitProfileReportAction(formData);
-      toast.success("Report submitted successfully!");
+      const result = await submitProfileReportAction(formData);
+
+      if (result?.profileId) {
+        toast.success("Report submitted successfully!");
+        router.push(`/profiles/${result.profileId}`);
+      } else {
+        toast.error("Submission failed or was interrupted.");
+      }
     } catch (err: any) {
-      // If the error is a redirect error, let Next.js handle it without showing a toast
-      if (err?.digest === "NEXT_REDIRECT") return;
-      toast.error("Submission failed.");
+      console.error(err);
+      toast.error(err.message || "Submission failed.");
     }
   }
 

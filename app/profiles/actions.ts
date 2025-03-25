@@ -15,7 +15,6 @@ import {
   RelatedProfileData,
   RelatedProfileIdentifier,
 } from "@/lib/types/related_profiles";
-import { redirect } from "next/navigation";
 
 /**
  * Single server action that:
@@ -97,9 +96,15 @@ export async function submitProfileReportAction(formData: FormData) {
       }
     }
 
-    redirect(`/profiles/${profileId}`);
+    // Use return instead of redirect if you want to handle it in the client
+    return { profileId };
   } catch (err: any) {
-    if (err?.digest === "NEXT_REDIRECT") throw err;
+    // If it's a redirect, just log it and return null
+    if (err?.digest === "NEXT_REDIRECT") {
+      console.error("[submitProfileReportAction] Redirect:", err);
+      return null;
+    }
+
     console.error("[submitProfileReportAction]", err);
     throw new Error(err.message ?? "Something went wrong");
   }
