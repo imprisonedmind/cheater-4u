@@ -23,7 +23,7 @@ export default async function ProfilesPage() {
             Filter
           </Button>
           <Button size="sm" asChild>
-            <a href="/reports/page/new">
+            <a href="/reports/new">
               <Plus className="mr-2 h-4 w-4" />
               Report Player
             </a>

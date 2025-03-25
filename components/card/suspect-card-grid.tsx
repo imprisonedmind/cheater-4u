@@ -59,7 +59,7 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
             {/* Banner w/ gradient + avatar */}
             <div className={`relative h-24 w-full `}>
               <StatusBackground
-                height={"full"}
+                height={"h-full"}
                 isCheater={suspect.cheater}
                 ban_status={suspect.ban_status}
                 suspicious_score={suspect.suspicious_score}
