@@ -23,12 +23,14 @@ export function Navbar() {
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link
+              prefetch={true}
               href="/profiles"
               className="transition-colors hover:text-primary"
             >
               Profiles
             </Link>
             <Link
+              prefetch={true}
               href="/reports"
               className="transition-colors hover:text-primary"
             >

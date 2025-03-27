@@ -101,7 +101,7 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
                     <span className="sr-only">Report</span>
                   </Button>
                   <Button variant="outline" size="icon" asChild>
-                    <Link href={`/profiles/${suspect.id}`}>
+                    <Link href={`/profiles/${suspect.id}`} prefetch={true}>
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">View Profile</span>
                     </Link>
