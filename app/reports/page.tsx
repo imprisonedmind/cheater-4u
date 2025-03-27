@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/utils/supabase/server";
 import {
   Table,
   TableBody,
@@ -12,42 +11,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { isProd } from "@/lib/utils";
-
-type ReportProfile = {
-  id: string;
-  steam_id_64: string;
-  steam_url: string | null;
-};
-
-interface Report {
-  id: string;
-  reporter_ip_hash: string;
-  reported_at: string;
-  profile: ReportProfile | null;
-}
+import { getReports } from "@/app/reports/actions";
+import { Report } from "@/lib/types/report";
 
 export default async function ReportsPage() {
-  const supabase = await createClient();
-
-  // Fetch reports with profile information
-  // TODO: this is not great
-  const { data: reports } = (await supabase
-    .from("reports")
-    .select(
-      `
-    id,
-    reporter_ip_hash,
-    reported_at,
-    profile:profile_id (
-      id,
-      steam_id_64,
-      steam_url
-    )
-  `,
-    )
-    .order("reported_at", { ascending: false })) as unknown as {
-    data: Report[];
-  };
+  const reports: Report[] = await getReports();
 
   return (
     <div className="space-y-6">

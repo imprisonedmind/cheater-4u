@@ -15,6 +15,7 @@ import {
   RelatedProfileData,
   RelatedProfileIdentifier,
 } from "@/lib/types/related_profiles";
+import { parseEvidenceFields } from "@/lib/utils";
 
 /**
  * Single server action that:
@@ -111,44 +112,6 @@ export async function submitProfileReportAction(formData: FormData) {
 }
 
 /**
- * Parse the relevant evidence fields from FormData.
- * You could also parse them inline if you prefer.
- */
-function parseEvidenceFields(formData: FormData) {
-  const videoUrl = formData.get("video_url")?.toString() ?? "";
-  const videoDesc = formData.get("video_description")?.toString() ?? "";
-  const screenshotUrl = formData.get("screenshot_url")?.toString() ?? "";
-  const screenshotDesc =
-    formData.get("screenshot_description")?.toString() ?? "";
-  const detailedDesc = formData.get("detailed_description")?.toString() ?? "";
-  const game = formData.get("game")?.toString() ?? "";
-
-  let evidenceType = "";
-  let evidenceUrl = "";
-  let evidenceContent = "";
-
-  if (videoUrl) {
-    evidenceType = "video";
-    evidenceUrl = videoUrl;
-    evidenceContent = videoDesc;
-  } else if (screenshotUrl) {
-    evidenceType = "screenshot";
-    evidenceUrl = screenshotUrl;
-    evidenceContent = screenshotDesc;
-  } else if (detailedDesc) {
-    evidenceType = "description";
-    evidenceUrl = "";
-    evidenceContent = detailedDesc;
-  }
-
-  if (game && evidenceContent) {
-    evidenceContent = `Game: ${game}\n${evidenceContent}`;
-  }
-
-  return { evidenceType, evidenceUrl, evidenceContent };
-}
-
-/**
  * Inserts a new row into the `evidence` table.
  * You can call this from anywhere, as long as you know the `profileId`
  * and the `steam_id_64`.
@@ -199,12 +162,8 @@ export async function submitEvidenceAction(
 export async function fetchEnrichedSuspectsAction(args?: { id?: string }) {
   const supabase = await createClient();
 
-  // 1) Base query from "profiles"
-  const query = args?.id
-    ? supabase.from("profiles").select("*").eq("id", args.id).single()
-    : supabase.from("profiles").select("*");
-
-  const { data: result, error } = await query;
+  // TODO: we need to be able to pass an ID into here and get back a individual result
+  const { data: result, error } = await supabase.from("profiles").select("*");
   if (error) {
     console.error("fetchEnrichedSuspectsAction error:", error);
     return { error: error.message };
