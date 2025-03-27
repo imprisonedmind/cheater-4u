@@ -1,13 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Filter, Plus } from "lucide-react";
 import { SuspectCardGrid } from "@/components/card/suspect-card-grid";
-import { fetchEnrichedSuspectsAction } from "@/app/profiles/actions";
-import { Suspect } from "@/lib/types/suspect";
+import { getSuspects } from "@/app/profiles/actions";
 import { isProd } from "@/lib/utils";
 
 export default async function ProfilesPage() {
-  const { data } = await fetchEnrichedSuspectsAction();
-  const suspects = data as Suspect[];
+  const suspects = await getSuspects();
 
   return (
     <div className="space-y-6">

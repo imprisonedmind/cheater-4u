@@ -1,5 +1,7 @@
 // lib/steamApi.ts
+"use server";
 import { STEAM32_OFFSET } from "@/lib/constants";
+import { revalidate_time } from "@/lib/utils";
 
 const apiKey = process.env.STEAM_API_KEY; // or process.env.STEAM_API_KEY
 
@@ -69,6 +71,12 @@ export async function resolveVanityURL(vanityName: string): Promise<string> {
   const apiKey = process.env.STEAM_API_KEY;
   const res = await fetch(
     `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=${apiKey}&vanityurl=${vanityName}`,
+    {
+      cache: "force-cache",
+      next: {
+        revalidate: revalidate_time,
+      },
+    },
   );
   const data = await res.json();
 
@@ -86,7 +94,12 @@ export async function resolveVanityURL(vanityName: string): Promise<string> {
 export async function fetchSteamUserSummary(steamId64: string) {
   const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId64}`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    cache: "force-cache",
+    next: {
+      revalidate: revalidate_time,
+    },
+  });
   if (!res.ok) {
     throw new Error(`Failed to fetch player summary: ${res.statusText}`);
   }
@@ -98,11 +111,12 @@ export async function fetchSteamUserSummary(steamId64: string) {
   }
 
   // We’ll return just a subset of fields
-  const { personaname, avatarfull } = players[0];
+  const { personaname, avatarfull, loccountrycode } = players[0];
 
   return {
     steam_name: personaname as string,
     avatar_url: avatarfull as string,
+    country_code: loccountrycode as string,
   };
 }
 
@@ -113,7 +127,12 @@ export async function fetchSteamUserSummary(steamId64: string) {
 export async function fetchSteamBans(steamId64: string) {
   const url = `https://api.steampowered.com/ISteamUser/GetPlayerBans/v1/?key=${apiKey}&steamids=${steamId64}`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    cache: "force-cache",
+    next: {
+      revalidate: revalidate_time,
+    },
+  });
   if (!res.ok) {
     throw new Error(`Failed to fetch player bans: ${res.statusText}`);
   }
@@ -124,9 +143,5 @@ export async function fetchSteamBans(steamId64: string) {
     return null;
   }
 
-  const { VACBanned, NumberOfVACBans, NumberOfGameBans } = players[0];
-  // We'll define "ban_status" as true if there's any ban
-  const ban_status = VACBanned || NumberOfVACBans > 0 || NumberOfGameBans > 0;
-
-  return { ban_status };
+  return players[0];
 }

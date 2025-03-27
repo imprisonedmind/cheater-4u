@@ -1,5 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { BanStatus, Suspect } from "@/lib/types/suspect";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -52,3 +53,79 @@ export function parseEvidenceFields(formData: FormData) {
 
   return { evidenceType, evidenceUrl, evidenceContent };
 }
+
+/**
+ * This works out whether the user has any sort of ban
+ * */
+export function isBanned(banStatus: BanStatus | null | undefined): boolean {
+  if (!banStatus) return false;
+
+  if (banStatus.CommunityBanned) return true;
+  if (banStatus.VACBanned) return true;
+  if (banStatus.NumberOfVACBans > 0) return true;
+  if (banStatus.NumberOfGameBans > 0) return true;
+  if (banStatus.DaysSinceLastBan > 0) return true;
+  return banStatus.EconomyBan.toLowerCase() !== "none";
+}
+
+/**
+ * Calculates a suspicious score based on multiple factors:
+ * - Newer accounts are more suspicious.
+ * - Any bans add a high penalty.
+ * - A private account (heuristic: missing or flagged steam_url) adds penalty.
+ * - A cheater flag from our DB increases the score.
+ * - Each report or evidence adds a small amount.
+ *
+ * You can adjust the weight for each factor as needed.
+ */
+export function calculateSuspiciousScore(suspect: Suspect): number {
+  let score = 0;
+
+  // Account Age: Newer accounts are often more suspicious.
+  if (suspect.created_at) {
+    const created = new Date(suspect.created_at);
+    const daysOld = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysOld < 30) {
+      score += 10;
+    } else if (daysOld < 180) {
+      score += 5;
+    }
+  } else {
+    // No creation date? That’s a bit fishy.
+    score += 5;
+  }
+
+  // Ban Status: Any ban flags a high suspicion.
+  if (isBanned(suspect.ban_status)) {
+    score += 50;
+  }
+
+  // Private Profile: Heuristically check if the account is private.
+  // This example assumes a private account may have an empty or flagged steam_url.
+  if (
+    !suspect.steam_url ||
+    suspect.steam_url.toLowerCase().includes("private")
+  ) {
+    score += 20;
+  }
+
+  // Cheater Flag: If flagged as a cheater in our DB.
+  if (suspect.cheater) {
+    score += 30;
+  }
+
+  // Reports and Evidence: Each report/evidence adds to the score.
+  if (suspect.report_count) {
+    score += suspect.report_count * 5;
+  }
+  if (suspect.evidence_count) {
+    score += suspect.evidence_count * 5;
+  }
+
+  return score;
+}
+
+/**
+ * Cache revalidation time for all queries at the moment
+ * */
+export const revalidate_time = 1800;

@@ -15,7 +15,9 @@ import {
   RelatedProfileData,
   RelatedProfileIdentifier,
 } from "@/lib/types/related_profiles";
-import { parseEvidenceFields } from "@/lib/utils";
+import { calculateSuspiciousScore, parseEvidenceFields } from "@/lib/utils";
+import { fetchSupabase } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
+import { CustomReport } from "@/lib/types/report";
 
 /**
  * Single server action that:
@@ -153,120 +155,101 @@ export async function submitEvidenceAction(
 }
 
 /**
- * Server Action: fetch one or many "profiles" from DB,
- * then enrich with Steam data, counts, and suspicious logic.
- *
- * If `id` is provided, returns a single suspect object.
- * If `id` is omitted, returns an array of suspects.
- */
-export async function fetchEnrichedSuspectsAction(args?: { id?: string }) {
-  const supabase = await createClient();
-
-  // TODO: we need to be able to pass an ID into here and get back a individual result
-  const { data: result, error } = await supabase.from("profiles").select("*");
-  if (error) {
-    console.error("fetchEnrichedSuspectsAction error:", error);
-    return { error: error.message };
+ * Gets the evidence for a single user
+ * return a list of Evidence objects
+ * */
+export async function getUserEvidence(profileId: string) {
+  const query = `evidence?select=*&profile_id=eq.${profileId}`;
+  const response = await fetchSupabase({ query });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch evidence for profile ${profileId}`);
   }
-
-  // We'll unify single vs. multiple by wrapping single in an array
-  const profiles = Array.isArray(result) ? result : [result];
-
-  // 2) Use Promise.all for concurrent enrichment
-  const enriched: Suspect[] = await Promise.all(
-    profiles.map(async (profile) => {
-      const suspect: Suspect = {
-        id: profile.id,
-        steam_id_64: profile.steam_id_64,
-        steam_id_32: profile.steam_id_32,
-        steam_url: profile.steam_url,
-        cheater: Boolean(profile.cheater),
-        created_at: profile.created_at,
-        updated_at: profile.updated_at,
-        related_profiles: profile.related_profiles,
-      };
-
-      // Concurrent queries
-      const [{ report_count, evidence_count }, steamSummary, steamBans] =
-        await Promise.all([
-          // Count reports and evidence concurrently
-          Promise.all([
-            supabase
-              .from("reports")
-              .select("*", { count: "exact" })
-              .eq("profile_id", suspect.id),
-            supabase
-              .from("evidence")
-              .select("*", { count: "exact" })
-              .eq("profile_id", suspect.id),
-          ]).then(([reportResult, evidenceResult]) => ({
-            report_count: reportResult.count ?? 0,
-            evidence_count: evidenceResult.count ?? 0,
-          })),
-
-          // Steam API calls (using cached versions)
-          suspect.steam_id_64
-            ? fetchSteamUserSummary(suspect.steam_id_64)
-            : null,
-          suspect.steam_id_64 ? fetchSteamBans(suspect.steam_id_64) : null,
-        ]);
-
-      // Populate enriched data
-      return {
-        ...suspect,
-        steam_name: steamSummary?.steam_name ?? "Unknown",
-        avatar_url:
-          steamSummary?.avatar_url ?? "/placeholder.svg?height=128&width=128",
-        ban_status: steamBans?.ban_status ?? false,
-        report_count,
-        evidence_count,
-        suspicious_score: suspect.cheater
-          ? 999
-          : Math.min(report_count * 10, 100),
-      };
-    }),
-  );
-
-  // Return single or array based on input
-  return args?.id ? { data: enriched[0] } : { data: enriched };
+  return (await response.json()) as Evidence[];
 }
 
 /**
- * Server Action: fetch one or many "evidence" from DB,
- */
-export async function fetchEvidenceForProfile(
-  profileId: string,
-): Promise<Evidence[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("evidence")
-    .select("*")
-    .eq("profile_id", profileId);
-
-  if (error) {
-    console.error("Error fetching evidence:", error);
-    throw new Error("Failed to fetch evidence for profile");
+ * Gets the reports for a single user
+ * returns a list of CustomReport's
+ * */
+export async function getUserReports(profileId: string) {
+  const query = `reports?select=*&profile_id=eq.${profileId}`;
+  const response = await fetchSupabase({ query });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch evidence for profile ${profileId}`);
   }
-
-  return data ?? [];
+  return (await response.json()) as CustomReport[];
 }
 
 /**
- * Server Action: fetch one or many "reports" from DB for a specific user,
+ * Enriches a suspect with additional data:
+ * - Evidence and report counts.
+ * - Steam summary.
+ * - Ban status.
+ * - Suspicious score.
  */
-export async function fetchReportsForUser(userId: string): Promise<Report[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("reports")
-    .select("*")
-    .eq("profile_id", userId);
+export async function enrichSuspect(suspect: any): Promise<Suspect> {
+  const evidence = await getUserEvidence(suspect.id);
+  const reports = await getUserReports(suspect.id);
+  const evidence_count = evidence.length;
+  const report_count = reports.length;
+  const steam_summary = await fetchSteamUserSummary(suspect.steam_id_64);
+  const ban_status = await fetchSteamBans(suspect.steam_id_64);
 
-  if (error) {
-    console.error("Error fetching reports:", error);
-    throw new Error("Failed to fetch reports for user");
+  // Calculate suspicious score using all available data
+  const suspicious_score = calculateSuspiciousScore({
+    ...suspect,
+    evidence_count,
+    report_count,
+    steam_summary,
+    ban_status,
+  });
+
+  return {
+    ...suspect,
+    evidence_count,
+    report_count,
+    steam_summary,
+    ban_status,
+    suspicious_score,
+  };
+}
+
+/**
+ * Fetches all the profiles in our DB
+ * then enriches them with data from steam
+ * */
+export async function getSuspects() {
+  try {
+    const query = `profiles?select=*`;
+    const response = await fetchSupabase({ query });
+    const suspects = await response.json();
+
+    // Enrich each suspect using the shared utility
+    const enrichedSuspects: Suspect[] = await Promise.all(
+      suspects.map((suspect: any) => enrichSuspect(suspect)),
+    );
+    return enrichedSuspects;
+  } catch (error) {
+    throw error;
   }
+}
 
-  return data ?? [];
+/**
+ * Fetches the matches profile from our DB
+ * then enriches profile with data from steam
+ * */
+export async function getSuspect(profileId: String) {
+  try {
+    // Filter profiles by the given profileId
+    const query = `profiles?select=*&id=eq.${profileId}`;
+    const response = await fetchSupabase({ query });
+    const data = await response.json();
+
+    const suspect: Suspect = await enrichSuspect(data[0]);
+    return await suspect;
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
@@ -274,7 +257,6 @@ export async function fetchReportsForUser(userId: string): Promise<Report[]> {
  * - If identifier.profile_id exists, we fetch data from our internal "profiles" table.
  * - Otherwise, if identifier.steam_id_64 exists, we fetch Steam data using our Steam API helper.
  */
-
 export async function fetchRelatedProfilesData(
   relatedProfiles: RelatedProfileIdentifier[],
 ): Promise<RelatedProfileData[]> {

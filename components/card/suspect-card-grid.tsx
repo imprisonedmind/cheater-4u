@@ -1,14 +1,15 @@
 "use client";
 
 import type { Suspect } from "@/lib/types/suspect";
+import { isBanned } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Eye, Flag } from "lucide-react";
-import Link from "next/link";
 import { SteamAvatar } from "@/components/avatar/reusable-avatar";
-import { StatusBackground } from "@/components/profiles/profile-header-background";
-import { getStatusBadge } from "@/components/badge/status-badge";
+import { Eye, Flag } from "lucide-react";
 import { CheaterStatusBar } from "@/components/profiles/cheater-status-bar";
+import Link from "next/link";
+import { getStatusBadge } from "@/components/badge/status-badge";
+import { StatusBackground } from "@/components/profiles/profile-header-background";
+import { Button } from "@/components/ui/button";
 
 /**
  * Matches the "CS skin card" look with:
@@ -25,16 +26,9 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
       {suspects.map((suspect) => {
         const badge = getStatusBadge({
           isCheater: suspect.cheater ?? false,
-          ban_status: suspect.ban_status ?? false,
+          ban_status: isBanned(suspect.ban_status),
           suspicious_score: suspect.suspicious_score ?? 0,
         });
-
-        // 1) Decide final suspicious_score
-        //    If "cheater" is true, override to 999 to indicate forced CHEATER
-        let suspicious_score = suspect.suspicious_score ?? 0;
-        if (suspect.cheater || suspect.ban_status) {
-          suspicious_score = 999;
-        }
 
         return (
           <Card
@@ -52,7 +46,7 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
               <StatusBackground
                 height={"h-full"}
                 isCheater={suspect.cheater ?? false}
-                ban_status={suspect.ban_status ?? false}
+                ban_status={isBanned(suspect.ban_status)}
                 suspicious_score={suspect.suspicious_score ?? 0}
               />
             </div>
@@ -61,22 +55,21 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
             <div className="flex flex-col gap-4 p-4 -mt-24">
               <div className={"mx-auto w-fit"}>
                 <SteamAvatar
-                  src={suspect.avatar_url}
-                  alt={suspect.steam_name}
+                  src={suspect.steam_summary.avatar_url}
+                  alt={suspect.steam_summary.steam_name}
                   size={128}
                 />
               </div>
 
+              {/* NAME AND SUMMARY */}
               <div className={"flex flex-col"}>
                 <div className="text-lg font-bold truncate">
-                  {suspect.steam_name}
+                  {suspect.steam_summary.steam_name}
                 </div>
+
                 <div className="text-xs text-muted-foreground truncate">
                   {suspect.steam_url}
                 </div>
-                {/*<div className="text-xs font-mono text-muted-foreground break-all">*/}
-                {/*  {suspect.steam_id_64}*/}
-                {/*</div>*/}
               </div>
 
               <div className="flex items-center justify-between">
@@ -86,11 +79,11 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
                 </span>
               </div>
 
-              {/* “Account Standing” bar */}
+              {/*  /!* “Account Standing” bar *!/*/}
               <CheaterStatusBar
-                suspiciousScore={suspicious_score}
+                suspiciousScore={suspect.suspicious_score}
                 cheater={suspect.cheater}
-                ban_status={suspect.ban_status}
+                ban_status={isBanned(suspect.ban_status)}
               />
               {/* Bottom-right icons */}
               <div className="flex justify-between space-x-2 pt-2">
@@ -100,6 +93,7 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
                     <Flag className="h-4 w-4" />
                     <span className="sr-only">Report</span>
                   </Button>
+
                   <Button variant="outline" size="icon" asChild>
                     <Link href={`/profiles/${suspect.id}`} prefetch={true}>
                       <Eye className="h-4 w-4" />

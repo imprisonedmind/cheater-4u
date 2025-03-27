@@ -1,7 +1,9 @@
+import { revalidate_time } from "@/lib/utils";
+
 export const fetchSupabase = ({
   query = "",
   cache = "force-cache",
-  revalidate = 300, // for testing we may want to up this in prod
+  revalidate = revalidate_time, // for testing we may want to up this in prod
 }: {
   query?: string;
   cache?: RequestCache;

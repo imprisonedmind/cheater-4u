@@ -1,6 +1,5 @@
 "use server";
 
-import { Report } from "@/lib/types/report";
 import { fetchSupabase } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
 
 export async function getReports() {

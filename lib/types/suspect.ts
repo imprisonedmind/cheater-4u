@@ -13,10 +13,25 @@ export interface Suspect {
   updated_at?: string;
 
   // Enriched fields:
-  steam_name?: string;
-  avatar_url?: string;
-  ban_status?: boolean;
   report_count?: number;
   evidence_count?: number;
-  suspicious_score?: number;
+  suspicious_score: number;
+  steam_summary: SteamSummary;
+  ban_status: BanStatus;
 }
+
+export type BanStatus = {
+  SteamId: string;
+  CommunityBanned: boolean;
+  VACBanned: boolean;
+  NumberOfVACBans: number;
+  DaysSinceLastBan: number;
+  NumberOfGameBans: number;
+  EconomyBan: string;
+};
+
+type SteamSummary = {
+  steam_name: string;
+  avatar_url: string;
+  country_code: string;
+};

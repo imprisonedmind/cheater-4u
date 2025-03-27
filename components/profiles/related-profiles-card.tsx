@@ -21,9 +21,8 @@ interface RelatedProfilesCardProps {
 export default async function RelatedProfilesCard({
   relatedProfiles,
 }: RelatedProfilesCardProps) {
-  console.log(relatedProfiles);
-
   // Call our server action to resolve full profile data.
+  // TODO: this is the next thing we need to cache. and do a lookup into our own DB.
   const relatedProfilesData: RelatedProfileData[] =
     await fetchRelatedProfilesData(relatedProfiles);
 

@@ -9,22 +9,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportsList } from "@/components/reports/reports-list";
-import { ProfileStats } from "@/components/profiles/profile-stats";
-import { AlertTriangle, Clock, Flag } from "lucide-react";
+import { AlertTriangle, Flag } from "lucide-react";
 import { CheaterStatusBar } from "@/components/profiles/cheater-status-bar";
 import { SteamProfileCard } from "@/components/profiles/steam-profile-card";
 import { EvidenceSection } from "@/components/evidence/evidence-section";
 import {
-  fetchEnrichedSuspectsAction,
-  fetchEvidenceForProfile,
-  fetchReportsForUser,
+  getSuspect,
+  getUserEvidence,
+  getUserReports,
 } from "@/app/profiles/actions";
-import { Suspect } from "@/lib/types/suspect";
 import { ProfileHeader } from "@/components/profiles/profile-header";
-import { Evidence } from "@/lib/types/evidence";
 import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
-import { CustomReport } from "@/lib/types/report";
-import { isProd } from "@/lib/utils";
+import { isBanned, isProd } from "@/lib/utils";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -34,14 +30,9 @@ interface ProfilePageProps {
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { id } = await params;
-  const { data } = await fetchEnrichedSuspectsAction({ id: id });
-  const suspect = data as Suspect;
-
-  const e = await fetchEvidenceForProfile(suspect.id);
-  const evidence = e as unknown as Evidence[];
-
-  const r = await fetchReportsForUser(suspect.id);
-  const reports = r as unknown as CustomReport[];
+  const suspect = await getSuspect(id);
+  const reports = await getUserReports(id);
+  const evidence = await getUserEvidence(id);
 
   return (
     <div className="space-y-6">
@@ -138,7 +129,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             steam_id_32={suspect.steam_id_32}
             steam_url={suspect.steam_url}
             firstReported={suspect.created_at}
-            banStatus={suspect.ban_status ?? false}
+            banStatus={isBanned(suspect.ban_status)}
             suspiciousScore={suspect.suspicious_score ?? 0}
             cheater={suspect.cheater ?? false}
           />

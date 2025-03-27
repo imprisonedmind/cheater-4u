@@ -4,6 +4,7 @@ import { Flag, Share2 } from "lucide-react";
 import { StatusBackground } from "@/components/profiles/profile-header-background";
 import { SteamAvatar } from "@/components/avatar/reusable-avatar";
 import { Suspect } from "@/lib/types/suspect";
+import { isBanned } from "@/lib/utils";
 
 export function ProfileHeader({ suspect }: { suspect: Suspect }) {
   return (
@@ -11,7 +12,7 @@ export function ProfileHeader({ suspect }: { suspect: Suspect }) {
       {/* "Gradient" + "Pattern" based on cheater/suspicious logic */}
       <StatusBackground
         isCheater={suspect.cheater ?? false}
-        ban_status={suspect.ban_status ?? false}
+        ban_status={isBanned(suspect.ban_status)}
         suspicious_score={suspect.suspicious_score ?? 0}
         height={"h-32"}
       />
@@ -21,14 +22,16 @@ export function ProfileHeader({ suspect }: { suspect: Suspect }) {
         <div className="flex-shrink-0 -mt-14">
           <SteamAvatar
             size={128}
-            alt={suspect.steam_name}
-            src={suspect.avatar_url ?? ""}
-            fallback={suspect.steam_name?.charAt(0).toUpperCase()}
+            alt={suspect.steam_summary.steam_name}
+            src={suspect.steam_summary.avatar_url ?? ""}
+            fallback={suspect.steam_summary.steam_name?.charAt(0).toUpperCase()}
           />
         </div>
 
         <div className="flex-1 space-y-2">
-          <p className="text-xl font-bold">{suspect.steam_name}</p>
+          <p className="text-xl font-bold">
+            {suspect.steam_summary.steam_name}
+          </p>
           <p className="text-sm text-muted-foreground font-mono">
             {suspect.steam_id_64}
           </p>
