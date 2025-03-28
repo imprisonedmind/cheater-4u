@@ -34,7 +34,7 @@ export default function Home() {
   return (
     <div className=" min-h-screen  ">
       {/* Hero background image with gradient overlay */}
-      <div className="absolute top-0 left-0 inset-0 h-[1200px] w-full">
+      <div className="absolute top-0 left-0 inset-0 h-[1300px] w-full">
         <Image
           src={hero}
           placeholder={"blur"}
@@ -42,11 +42,11 @@ export default function Home() {
           className="h-full w-full object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/0" />
       </div>
 
       <div className="relative space-y-8">
-        <section className="py-12 pt-[300px]">
+        <section className="py-12 pt-[380px]">
           <div className="container px-4 md:px-6">
             <div className="max-w-3xl">
               <div className="space-y-4">

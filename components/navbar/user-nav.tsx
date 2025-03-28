@@ -16,7 +16,7 @@ export async function UserNav() {
   const user = await getServerSession();
 
   return (
-    <nav className={"mt-2"}>
+    <nav className={"mt-1"}>
       {isLoggedIn(user) ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
