@@ -18,6 +18,7 @@ import {
 import { calculateSuspiciousScore, parseEvidenceFields } from "@/lib/utils";
 import { fetchSupabase } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
 import { CustomReport } from "@/lib/types/report";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
 /**
  * Single server action that:
@@ -29,18 +30,18 @@ export async function submitProfileReportAction(formData: FormData) {
   try {
     const supabase = await createClient();
 
-    const steamUrl = formData.get("steam_url")?.toString() ?? "";
+    const user = await getServerSession(); // You now have access to session
+    const reporter_steam_id_64 = user?.steam_id_64;
+    if (!reporter_steam_id_64) throw new Error("Unauthorized");
+
+    const steamUrl = formData.get("steam_url")?.toString();
     if (!steamUrl) throw new Error("Missing Steam URL");
 
-    // 🚨 This line throws immediately if resolution fails
     const { steam_id_64, steam_id_32 } =
       await getSteamIDsFromProfileUrl(steamUrl);
 
-    // Additional validation: Check if the Steam profile exists and is fetchable
     const steamSummary = await fetchSteamUserSummary(steam_id_64);
-    if (!steamSummary) {
-      throw new Error("Steam profile not found or is private");
-    }
+    if (!steamSummary) throw new Error("Steam profile not found or is private");
 
     const { data: upsertedProfile, error: profileError } = await supabase
       .from("profiles")
@@ -52,64 +53,51 @@ export async function submitProfileReportAction(formData: FormData) {
         },
         { onConflict: "steam_id_64", ignoreDuplicates: true },
       )
-      .select()
+      .select("id")
       .single();
 
-    let profileId: string | undefined;
+    if (profileError) throw profileError;
 
-    if (!upsertedProfile && !profileError) {
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("steam_id_64", steam_id_64)
-        .single();
-      profileId = existingProfile?.id;
-    } else {
-      if (profileError) throw profileError;
-      profileId = upsertedProfile?.id;
-    }
+    const profileId = upsertedProfile?.id;
+    if (!profileId) throw new Error("Could not upsert or find profile.");
 
-    if (!profileId) throw new Error("Could not upsert profile.");
-
-    const fakeIp = "0.0.0.0";
-    const hashedIp = await hashIP(fakeIp);
+    const fakeIp = "0.0.0.0"; // Replace with real IP if possible
+    const reporter_ip_hash = await hashIP(fakeIp);
 
     const { error: reportError } = await supabase.from("reports").insert({
       profile_id: profileId,
-      reporter_ip_hash: hashedIp,
+      reporter_ip_hash,
+      reporter_steam_id_64,
     });
 
     if (reportError) throw reportError;
 
-    const hasEvidence =
-      formData.get("evidence_type") ||
-      formData.get("evidence_url") ||
-      formData.get("comments") ||
-      formData.get("leetify_link") ||
-      formData.get("video_url");
+    const hasEvidence = [
+      "evidence_type",
+      "evidence_url",
+      "comments",
+      "leetify_link",
+      "video_url",
+    ].some((field) => formData.get(field));
 
     if (hasEvidence) {
-      const evidenceResult = await submitEvidenceAction(formData, {
+      const result = await submitEvidenceAction(formData, {
         profileId,
         steam_id_64,
       });
-
-      if (!evidenceResult.success) {
-        throw new Error(evidenceResult.error ?? "Failed to insert evidence");
-      }
+      if (!result.success)
+        throw new Error(result.error ?? "Failed to insert evidence");
     }
 
-    // Use return instead of redirect if you want to handle it in the client
     return { profileId };
   } catch (err: any) {
-    // If it's a redirect, just log it and return null
     if (err?.digest === "NEXT_REDIRECT") {
       console.error("[submitProfileReportAction] Redirect:", err);
       return null;
     }
 
     console.error("[submitProfileReportAction]", err);
-    throw new Error(err.message ?? "Something went wrong");
+    throw new Error(err.message ?? "Unexpected server error");
   }
 }
 
