@@ -2,9 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Filter, Plus } from "lucide-react";
 import { SuspectCardGrid } from "@/components/card/suspect-card-grid";
 import { getSuspects } from "@/app/profiles/actions";
-import { isProd } from "@/lib/utils";
+import { isLoggedIn } from "@/lib/utils";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
 export default async function ProfilesPage() {
+  const user = await getServerSession();
   const suspects = await getSuspects();
 
   return (
@@ -21,7 +23,7 @@ export default async function ProfilesPage() {
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button>
-          {!isProd() && (
+          {isLoggedIn(user) && (
             <Button size="sm" asChild>
               <a href="/reports/new">
                 <Plus className="mr-2 h-4 w-4" />

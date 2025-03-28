@@ -20,7 +20,8 @@ import {
 } from "@/app/profiles/actions";
 import { ProfileHeader } from "@/components/profiles/profile-header";
 import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
-import { isBanned, isProd } from "@/lib/utils";
+import { isBanned, isLoggedIn } from "@/lib/utils";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -29,6 +30,7 @@ interface ProfilePageProps {
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
+  const user = await getServerSession();
   const { id } = await params;
   const suspect = await getSuspect(id);
   const reports = await getUserReports(id);
@@ -69,7 +71,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   <ReportsList reports={reports || []} />
                 </CardContent>
                 <CardFooter>
-                  {!isProd() && (
+                  {/*TODO:// implement this , pop-up*/}
+                  {isLoggedIn(user) && (
                     <Button variant="outline" className="w-full">
                       <Flag className="mr-2 h-4 w-4" />
                       Submit New Report
@@ -87,6 +90,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                     <AlertTriangle className="mr-2 h-5 w-5 text-primary" />
                     Evidence Submitted
                   </CardTitle>
+
                   <CardDescription>
                     {suspect.evidence_count} pieces of evidence have been
                     submitted
@@ -98,6 +102,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                     evidence={evidence || []}
                   />
                 </CardContent>
+                <CardFooter>
+                  {/*TODO:// implement this , pop-up*/}
+                  {isLoggedIn(user) && (
+                    <Button variant="outline" className="w-full">
+                      <Flag className="mr-2 h-4 w-4" />
+                      Add new Evidence
+                    </Button>
+                  )}
+                </CardFooter>
               </Card>
             </TabsContent>
 

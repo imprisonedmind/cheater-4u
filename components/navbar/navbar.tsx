@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
@@ -12,11 +10,11 @@ export function Navbar() {
     <header
       className={cn(
         "sticky top-0 z-50 w-full",
-        "border-b border-border bg-card/80 backdrop-blur-sm z-[500]",
+        "border-b border-border bg-card/80 backdrop-blur-sm z-[10]",
       )}
     >
       <AdvertisementBar />
-      <div className="container flex h-14 items-center mx-auto">
+      <div className="container flex items-center mx-auto py-2">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold text-lg text-primary">Cheater4U</span>

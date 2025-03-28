@@ -10,11 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { isProd } from "@/lib/utils";
+import { isLoggedIn, isProd } from "@/lib/utils";
 import { getReports } from "@/app/reports/actions";
 import { Report } from "@/lib/types/report";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
 export default async function ReportsPage() {
+  const user = await getServerSession();
   const reports: Report[] = await getReports();
 
   return (
@@ -26,7 +28,7 @@ export default async function ReportsPage() {
             View and manage reports of suspected cheaters
           </p>
         </div>
-        {!isProd() && (
+        {isLoggedIn(user) && (
           <Button asChild>
             <Link href="/reports/new">
               <Plus className="mr-2 h-4 w-4" />

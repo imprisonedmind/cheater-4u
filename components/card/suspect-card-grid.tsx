@@ -57,7 +57,7 @@ export function SuspectCardGrid({ suspects }: SuspectCardGridProps) {
                 <SteamAvatar
                   src={suspect.steam_summary.avatar_url}
                   alt={suspect.steam_summary.steam_name}
-                  size={128}
+                  className={"size-32"}
                 />
               </div>
 

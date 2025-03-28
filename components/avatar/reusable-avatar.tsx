@@ -4,19 +4,17 @@ type SteamAvatarProps = {
   src?: string;
   alt?: string;
   fallback?: string;
-  size?: number; // in pixels
+  className?: string;
 };
 
 export function SteamAvatar({
   src,
   alt,
   fallback,
-  size = 40,
+  className = "size-8 rounded-full",
 }: SteamAvatarProps) {
-  const dimension = `${size}px`;
-
   return (
-    <Avatar style={{ width: dimension, height: dimension }}>
+    <Avatar className={className}>
       <AvatarImage src={src || ""} alt={alt} />
       <AvatarFallback className="text-sm">
         {fallback?.charAt(0).toUpperCase()}

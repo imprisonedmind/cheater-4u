@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { BanStatus, Suspect } from "@/lib/types/suspect";
+import { SessionUser } from "@/lib/auth/session";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -129,3 +130,10 @@ export function calculateSuspiciousScore(suspect: Suspect): number {
  * Cache revalidation time for all queries at the moment
  * */
 export const revalidate_time = 1800;
+
+/**
+ * Helper to let us know if someone is acutally logged in
+ * */
+export function isLoggedIn(user: Partial<SessionUser>): user is SessionUser {
+  return Boolean(user?.steam_id_64);
+}

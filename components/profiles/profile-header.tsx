@@ -4,9 +4,12 @@ import { Flag, Share2 } from "lucide-react";
 import { StatusBackground } from "@/components/profiles/profile-header-background";
 import { SteamAvatar } from "@/components/avatar/reusable-avatar";
 import { Suspect } from "@/lib/types/suspect";
-import { isBanned } from "@/lib/utils";
+import { isBanned, isLoggedIn } from "@/lib/utils";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
-export function ProfileHeader({ suspect }: { suspect: Suspect }) {
+export async function ProfileHeader({ suspect }: { suspect: Suspect }) {
+  const user = await getServerSession();
+
   return (
     <Card className="overflow-hidden p-0">
       {/* "Gradient" + "Pattern" based on cheater/suspicious logic */}
@@ -21,7 +24,7 @@ export function ProfileHeader({ suspect }: { suspect: Suspect }) {
       <div className="px-6 pb-6 flex flex-col md:flex-row gap-6 z-[200] items-center">
         <div className="flex-shrink-0 -mt-14">
           <SteamAvatar
-            size={128}
+            className={"size-32"}
             alt={suspect.steam_summary.steam_name}
             src={suspect.steam_summary.avatar_url ?? ""}
             fallback={suspect.steam_summary.steam_name?.charAt(0).toUpperCase()}
@@ -44,10 +47,12 @@ export function ProfileHeader({ suspect }: { suspect: Suspect }) {
         </div>
 
         <div className="flex flex-row md:flex-col gap-2 self-start my-auto">
-          <Button size="sm">
-            <Flag className="mr-2 h-4 w-4" />
-            Report
-          </Button>
+          {isLoggedIn(user) && (
+            <Button size="sm">
+              <Flag className="mr-2 h-4 w-4" />
+              Report
+            </Button>
+          )}
 
           <Button size="sm" variant="outline">
             <Share2 className="mr-2 h-4 w-4" />
