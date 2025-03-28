@@ -17,7 +17,9 @@ export function Navbar() {
       <div className="container flex items-center mx-auto py-2">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-lg text-primary">Cheater4U</span>
+            <span className="font-bold text-lg text-primary">
+              Cheater<span className={"text-green-500"}>4U</span>
+            </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link

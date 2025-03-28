@@ -42,7 +42,7 @@ export default function Home() {
           className="h-full w-full object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/0" />
       </div>
 
       <div className="relative space-y-8">
