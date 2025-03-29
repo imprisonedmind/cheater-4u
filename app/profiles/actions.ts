@@ -179,7 +179,7 @@ export async function getUserComments(profileId: string) {
     )&profile_id=eq.${profileId}&order=created_at.asc
   `.replace(/\s+/g, "");
 
-  const res = await fetchSupabase({ query, revalidate: 0 });
+  const res = await fetchSupabase({ query, revalidate: 0, cache: "no-cache" });
 
   if (!res.ok) {
     console.error("Failed to fetch comments:", await res.text());
