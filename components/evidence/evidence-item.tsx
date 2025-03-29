@@ -16,7 +16,7 @@ interface EvidenceItemProps {
 
 export const EvidenceItem = async ({ evidence }: EvidenceItemProps) => {
   const user = await getServerSession();
-  const reporter = await getEnrichedUser({ profileId: evidence.reporter });
+  const reporter = await getEnrichedUser(evidence.reporter);
 
   return (
     <div className="card bg-secondary/30 p-4 rounded-lg">

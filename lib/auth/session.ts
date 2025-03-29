@@ -2,6 +2,7 @@
 import { SessionOptions } from "iron-session";
 
 export interface SessionUser {
+  id: string;
   steam_id_64: string;
   steam_id_32: string;
   steam_url: string;

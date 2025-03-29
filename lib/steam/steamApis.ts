@@ -2,6 +2,7 @@
 "use server";
 import { STEAM32_OFFSET } from "@/lib/constants";
 import { revalidate_time } from "@/lib/utils";
+import {SteamSummary} from "@/lib/types/suspect";
 
 const apiKey = process.env.STEAM_API_KEY; // or process.env.STEAM_API_KEY
 
@@ -117,7 +118,7 @@ export async function fetchSteamUserSummary(steamId64: string) {
     steam_name: personaname as string,
     avatar_url: avatarfull as string,
     country_code: loccountrycode as string,
-  };
+  } as SteamSummary;
 }
 
 /**

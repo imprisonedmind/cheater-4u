@@ -79,7 +79,7 @@ export function isBanned(banStatus: BanStatus | null | undefined): boolean {
  *
  * You can adjust the weight for each factor as needed.
  */
-export function calculateSuspiciousScore(suspect: Suspect): number {
+export function calculateSuspiciousScore(suspect: any): number {
   let score = 0;
 
   // Account Age: Newer accounts are often more suspicious.

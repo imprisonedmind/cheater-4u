@@ -210,7 +210,7 @@ export async function getUserComments(profileId: string) {
  * - Ban status.
  * - Suspicious score.
  */
-export async function enrichSuspect(suspect: any): Promise<Suspect> {
+export async function enrichSuspect(suspect: Suspect): Promise<Suspect> {
   const evidence = await getUserEvidence(suspect.id);
   const reports = await getUserReports(suspect.id);
   const comments = await getUserComments(suspect.id);
@@ -238,7 +238,7 @@ export async function enrichSuspect(suspect: any): Promise<Suspect> {
     steam_summary,
     ban_status,
     suspicious_score,
-  };
+  } as Suspect;
 }
 
 /**

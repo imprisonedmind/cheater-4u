@@ -100,6 +100,7 @@ export function CommentsSection({
                       key={comment.id}
                       comment={comment}
                       currentUserId={currentUserId}
+                      refreshCommentsAction={() => getUserComments(profileId).then(setComments)}
                     />
                   ))
                 ) : (

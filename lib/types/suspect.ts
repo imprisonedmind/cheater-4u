@@ -31,7 +31,7 @@ export type BanStatus = {
   EconomyBan: string;
 };
 
-type SteamSummary = {
+export type SteamSummary = {
   steam_name: string;
   avatar_url: string;
   country_code: string;
