@@ -10,7 +10,12 @@ import { createClient } from "@/lib/utils/supabase/server";
  */
 export async function submitEvidenceAction(
   formData: FormData,
-  args: { profileId: string; steam_id_64?: string; game?: string },
+  args: {
+    profileId: string;
+    steam_id_64?: string;
+    game?: string;
+    userId?: string;
+  },
 ) {
   const supabase = await createClient();
 
@@ -22,16 +27,16 @@ export async function submitEvidenceAction(
     return { success: false, message: "No evidence fields provided." };
   }
 
-  const { profileId, steam_id_64, game } = args;
+  const { profileId, steam_id_64, game, userId } = args;
 
-  // Insert a new `evidence` row
   const { error } = await supabase.from("evidence").insert({
     profile_id: profileId,
-    steam_id_64: steam_id_64 ?? null, // optional
+    steam_id_64: steam_id_64 ?? null,
     evidence_type: evidenceType,
     evidence_url: evidenceUrl || null,
     content: evidenceContent || null,
-    game: game || null, // ✅ write game field if provided
+    game: game || null,
+    reporter: userId ?? null,
   });
 
   if (error) {

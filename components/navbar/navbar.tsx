@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, isLoggedIn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { UserNav } from "@/components/navbar/user-nav";
 import type React from "react";
 import AdvertisementBar from "@/components/navbar/advertisement-bar";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
-export function Navbar() {
+export async function Navbar() {
+  const user = await getServerSession();
+
   return (
     <header
       className={cn(
@@ -36,6 +39,14 @@ export function Navbar() {
             >
               Reports
             </Link>
+            {isLoggedIn(user) && (
+              <Link
+                href="/reports/new"
+                className="transition-colors hover:text-primary"
+              >
+                Report Player
+              </Link>
+            )}
           </nav>
         </div>
         <div className="ml-auto flex items-center space-x-4">

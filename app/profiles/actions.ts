@@ -58,8 +58,7 @@ export async function getUserComments(
 
   const commentRes = await fetchSupabase({
     query,
-    revalidate: 0,
-    cache: "no-cache",
+    tags: [`comment-${profileId}`],
   });
   if (!commentRes.ok) {
     console.error("Failed to fetch comments:", await commentRes.text());
@@ -181,7 +180,7 @@ export async function enrichSuspect(suspect: Suspect): Promise<Suspect> {
 export async function getSuspects() {
   try {
     const query = `profiles?select=*`;
-    const response = await fetchSupabase({ query });
+    const response = await fetchSupabase({ query, tags: ["suspects"] });
     const suspects = await response.json();
 
     // Enrich each suspect using the shared utility

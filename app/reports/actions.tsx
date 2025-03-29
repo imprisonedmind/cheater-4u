@@ -9,6 +9,7 @@ import {
 import { hashIP } from "@/lib/utils/hasIp";
 import { createClient } from "@/lib/utils/supabase/server";
 import { submitEvidenceAction } from "@/app/evidence/actions";
+import { revalidateTag } from "next/cache";
 
 export async function getReports() {
   // Build the query string using Supabase's PostgREST syntax.
@@ -55,10 +56,12 @@ export async function submitProfileReportAction(formData: FormData) {
           steam_id_32,
           steam_url: `https://steamcommunity.com/profiles/${steam_id_64}`,
         },
-        { onConflict: "steam_id_64", ignoreDuplicates: true },
+        {
+          onConflict: "steam_id_64", // this needs a UNIQUE constraint
+        },
       )
       .select("id")
-      .single();
+      .single(); // fails if no or multiple rows returned
 
     if (profileError) throw profileError;
 
@@ -91,6 +94,7 @@ export async function submitProfileReportAction(formData: FormData) {
         profileId,
         steam_id_64,
         game,
+        userId: user?.id, // ✅ Add user.id for reporter field
       });
 
       if (!result.success) {
@@ -98,6 +102,7 @@ export async function submitProfileReportAction(formData: FormData) {
       }
     }
 
+    revalidateTag("suspects");
     return { profileId };
   } catch (err: any) {
     if (err?.digest === "NEXT_REDIRECT") {

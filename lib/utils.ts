@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { BanStatus, Suspect } from "@/lib/types/suspect";
+import { BanStatus } from "@/lib/types/suspect";
 import { SessionUser } from "@/lib/auth/session";
 
 export function cn(...inputs: ClassValue[]) {
@@ -46,10 +46,6 @@ export function parseEvidenceFields(formData: FormData) {
     evidenceType = "description";
     evidenceUrl = "";
     evidenceContent = detailedDesc;
-  }
-
-  if (game && evidenceContent) {
-    evidenceContent = `Game: ${game}\n${evidenceContent}`;
   }
 
   return { evidenceType, evidenceUrl, evidenceContent };

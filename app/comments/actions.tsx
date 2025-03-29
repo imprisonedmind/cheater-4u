@@ -4,6 +4,7 @@ import {
   fetchSupabase,
   mutateSupabase,
 } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
+import { revalidateTag } from "next/cache";
 
 /**
  * Create a new comment or reply
@@ -34,6 +35,7 @@ export async function upsertComment({
       prefer: "return=representation",
     });
 
+    revalidateTag(`comment-${profileId}`);
     return created;
   } catch (err) {
     console.error("Failed to create comment:", err);
@@ -45,11 +47,14 @@ export async function upsertComment({
  * Delete a comment
  * */
 
-export async function deleteComment(commentId: string) {
-  return await mutateSupabase({
+export async function deleteComment(commentId: string, profileId: string) {
+  const mutate = await mutateSupabase({
     method: "DELETE",
     query: `comments?id=eq.${commentId}`,
   });
+
+  revalidateTag(`comment-${profileId}`);
+  return mutate;
 }
 
 /**

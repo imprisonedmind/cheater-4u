@@ -4,10 +4,12 @@ export const fetchSupabase = ({
   query = "",
   cache = "force-cache",
   revalidate = revalidate_time, // for testing we may want to up this in prod
+  tags = undefined,
 }: {
   query?: string;
   cache?: RequestCache;
   revalidate?: number | false;
+  tags?: [string] | undefined;
 }) => {
   const supabaseApiKey = process.env.SUPABASE_ANON_KEY;
   if (!supabaseApiKey) {
@@ -20,10 +22,14 @@ export const fetchSupabase = ({
     cache,
     next: {
       revalidate,
+      tags: tags,
     },
   });
 };
 
+/**
+ * Supabase API helper func to affect DB
+ * */
 export async function mutateSupabase({
   method,
   query,

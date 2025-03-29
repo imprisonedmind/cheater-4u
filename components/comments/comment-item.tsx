@@ -46,7 +46,7 @@ export function CommentItem({
     if (!confirmed) return;
 
     try {
-      await deleteComment(commentId);
+      await deleteComment(commentId, comment.profileId);
       toast.success("Comment deleted.");
       refreshCommentsAction();
     } catch (err) {
