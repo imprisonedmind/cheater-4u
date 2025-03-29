@@ -1,21 +1,20 @@
 "use server";
 
-import {
-  fetchSupabase,
-  mutateSupabase,
-} from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
+import { mutateSupabase } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
 
 /**
- * Create a new comment
+ * Create a new comment or reply
  */
 export async function upsertComment({
   profileId,
   authorId,
   content,
+  parentId, // ✅ used for replies
 }: {
   profileId: string;
   authorId: string;
   content: string;
+  parentId?: string;
 }) {
   const body = {
     profile_id: profileId,
@@ -23,47 +22,22 @@ export async function upsertComment({
     content,
     up_votes: 0,
     down_votes: 0,
-    replies: [],
+    ...(parentId && { parent_id: parentId }), // only if replying
   };
 
   try {
-    await mutateSupabase({
+    const [created] = await mutateSupabase({
       method: "POST",
       query: "comments",
       body,
+      prefer: "return=representation",
     });
+
+    return created;
   } catch (err) {
     console.error("Failed to create comment:", err);
     throw new Error("Comment creation failed");
   }
-
-  // No return — caller will re-fetch fresh data
-}
-
-/**
- * Create a new comment and go put its own id in the replies
- * */
-export async function appendReplyToComment({
-  parentId,
-  replyId,
-}: {
-  parentId: string;
-  replyId: string;
-}) {
-  const parent = await fetchSupabase({
-    query: `comments?id=eq.${parentId}&select=replies`,
-    cache: "no-store",
-  })
-    .then((res) => res.json())
-    .then((data) => data[0]);
-
-  const updatedReplies = [...(parent?.replies ?? []), replyId];
-
-  return await mutateSupabase({
-    method: "PATCH",
-    query: `comments?id=eq.${parentId}`,
-    body: { replies: updatedReplies },
-  });
 }
 
 /**

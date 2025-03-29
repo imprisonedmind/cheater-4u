@@ -19,6 +19,7 @@ import { calculateSuspiciousScore, parseEvidenceFields } from "@/lib/utils";
 import { fetchSupabase } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
 import { CustomReport } from "@/lib/types/report";
 import { getServerSession } from "@/lib/auth/get-server-session";
+import { CommentType } from "@/lib/types/comment";
 
 /**
  * Single server action that:
@@ -173,12 +174,12 @@ export async function getUserReports(profileId: string) {
  * */
 export async function getUserComments(profileId: string) {
   const query = `
-    comments?select=id,created_at,content,up_votes,down_votes,replies,author_id(
+    comments?select=id,created_at,content,up_votes,down_votes,parent_id,author_id(
       id,steam_name,steam_avatar_url
-    )&profile_id=eq.${profileId}&order=created_at.desc
+    )&profile_id=eq.${profileId}&order=created_at.asc
   `.replace(/\s+/g, "");
 
-  const res = await fetchSupabase({ query });
+  const res = await fetchSupabase({ query, revalidate: 0 });
 
   if (!res.ok) {
     console.error("Failed to fetch comments:", await res.text());
@@ -187,20 +188,42 @@ export async function getUserComments(profileId: string) {
 
   const data = await res.json();
 
-  return data.map((comment: any) => ({
-    id: comment.id,
-    profileId,
-    createdAt: comment.created_at ? new Date(comment.created_at) : new Date(),
-    content: comment.content,
-    likes: comment.up_votes ?? 0,
-    dislikes: comment.down_votes ?? 0,
-    replies: comment.replies ?? [],
-    author: {
-      id: comment.author_id?.id,
-      name: comment.author_id?.steam_name ?? "Unknown",
-      avatar: comment.author_id?.steam_avatar_url ?? "/placeholder.svg",
-    },
-  }));
+  // Group into threads
+  const topLevel: CommentType[] = [];
+  const map = new Map<number, CommentType>();
+
+  for (const comment of data) {
+    const transformed: CommentType = {
+      id: comment.id,
+      profileId,
+      createdAt: comment.created_at ? new Date(comment.created_at) : new Date(),
+      content: comment.content,
+      likes: comment.up_votes ?? 0,
+      dislikes: comment.down_votes ?? 0,
+      replies: [],
+      author: {
+        id: comment.author_id?.id,
+        name: comment.author_id?.steam_name,
+        avatar: comment.author_id?.steam_avatar_url,
+      },
+    };
+
+    map.set(comment.id, transformed);
+
+    if (comment.parent_id == null) {
+      topLevel.push(transformed);
+    } else {
+      const parent = map.get(comment.parent_id);
+      if (parent) {
+        parent.replies.push(transformed);
+      } else {
+        // orphaned reply — fallback to top-level
+        topLevel.push(transformed);
+      }
+    }
+  }
+
+  return topLevel;
 }
 
 /**
