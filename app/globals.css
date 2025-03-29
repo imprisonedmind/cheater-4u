@@ -147,3 +147,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+.dangerLink > a{
+  @apply cursor-pointer hover:underline text-blue-600;
+}

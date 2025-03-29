@@ -1,108 +1,187 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { TabsContent } from "@/components/ui/tabs";
 
-import { useState } from "react"
-import { Send } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { CommentItem, type CommentType } from "./comment-item";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"; // Mock data for comments
 
-interface Comment {
-  id: string
-  content: string
-  created_at: string
-  user_id: string
+// Mock data for comments
+const mockComments: CommentType[] = [
+  {
+    id: "1",
+    author: {
+      id: "user1",
+      name: "JohnDoe",
+      avatar: "/placeholder.svg?height=32&width=32",
+    },
+    content:
+      "I've played against this person multiple times. Definitely using some kind of aim assistance. The tracking was way too perfect even through smoke.",
+    createdAt: new Date(2023, 10, 15),
+    likes: 24,
+    dislikes: 3,
+    replies: [
+      {
+        id: "2",
+        author: {
+          id: "user2",
+          name: "GameMaster",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        content:
+          "I agree. I was in the same match and noticed the same behavior. Their reaction time was inhuman.",
+        createdAt: new Date(2023, 10, 16),
+        likes: 12,
+        dislikes: 1,
+        replies: [],
+      },
+      {
+        id: "3",
+        author: {
+          id: "user3",
+          name: "ProPlayer",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        content:
+          "I'm not sure. Some players are just really good. I'd need to see more evidence before making a judgment.",
+        createdAt: new Date(2023, 10, 17),
+        likes: 8,
+        dislikes: 15,
+        replies: [],
+      },
+    ],
+  },
+  {
+    id: "6",
+    author: {
+      id: "user5",
+      name: "GameDev",
+      avatar: "/placeholder.svg?height=32&width=32",
+    },
+    content:
+      "I've analyzed their gameplay patterns across multiple matches. The consistency in their aim suggests they might be using some form of assistance, but it's hard to be 100% certain without more data.",
+    createdAt: new Date(2023, 11, 5),
+    likes: 32,
+    dislikes: 7,
+    replies: [],
+  },
+  {
+    id: "7",
+    author: {
+      id: "user6",
+      name: "Moderator",
+      avatar: "/placeholder.svg?height=32&width=32",
+    },
+    content:
+      "We're currently investigating this player. Please continue to submit evidence if you encounter them in your matches.",
+    createdAt: new Date(2023, 11, 10),
+    likes: 45,
+    dislikes: 0,
+    replies: [],
+  },
+];
+
+interface CommentsSectionProps {
+  profileId: string;
 }
 
-interface CommentSectionProps {
-  comments: Comment[]
-  profileId: string
-}
+export function CommentsSection({ profileId }: CommentsSectionProps) {
+  const [comments, setComments] = useState<CommentType[]>(mockComments);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-export function CommentSection({ comments, profileId }: CommentSectionProps) {
-  const [newComment, setNewComment] = useState("")
-  const [localComments, setLocalComments] = useState<Comment[]>(comments)
+  const handleSubmitComment = () => {
+    if (!newComment.trim()) return;
 
-  // Function to handle comment submission (in a real app, this would call an API)
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault()
+    setIsSubmitting(true);
 
-    if (!newComment.trim()) return
+    // Simulate API call
+    setTimeout(() => {
+      const newCommentObj: CommentType = {
+        id: `comment-${Date.now()}`,
+        author: {
+          id: "current-user",
+          name: "CurrentUser",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        content: newComment,
+        createdAt: new Date(),
+        likes: 0,
+        dislikes: 0,
+        replies: [],
+      };
 
-    // Create new comment object
-    const comment: Comment = {
-      id: `cm-${Date.now()}`,
-      content: newComment,
-      created_at: new Date().toISOString(),
-      user_id: "current-user", // In a real app, this would be the actual user ID
-    }
-
-    // Add to local state
-    setLocalComments((prev) => [comment, ...prev])
-
-    // Reset form
-    setNewComment("")
-  }
-
-  // Format date to relative time (e.g., "2 days ago")
-  const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-    if (diffInSeconds < 60) return "just now"
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`
-    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`
-    return `${Math.floor(diffInSeconds / 31536000)} years ago`
-  }
+      setComments([newCommentObj, ...comments]);
+      setNewComment("");
+      setIsSubmitting(false);
+    }, 500);
+  };
 
   return (
-      <div className="space-y-4">
-        {/* Comment Form */}
-        <form onSubmit={handleSubmitComment} className="flex gap-2">
-          <input
-              type="text"
-              placeholder="Add a comment..."
-              className="search-input flex-1"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              required
-          />
-          <button type="submit" className="btn btn-primary">
-            <Send className="h-4 w-4" />
-          </button>
-        </form>
+    <TabsContent value="comments" className={"mt-4"}>
+      <Card>
+        <CardHeader>
+          <CardTitle className={"flex items-center"}>
+            <MessageSquare className="mr-2 h-5 w-5 text-primary" />
+            Comments Submitted
+          </CardTitle>
+          <CardDescription>
+            {comments.length} comments have been submitted
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-background rounded-md">
+            <div className="p-4">
+              <div className="mb-6">
+                <Textarea
+                  placeholder="Add your comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="mb-2 min-h-[100px] bg-background border-muted"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSubmitComment}
+                    disabled={!newComment.trim() || isSubmitting}
+                    variant="outline"
+                  >
+                    {isSubmitting ? "Submitting..." : "Post Comment"}
+                  </Button>
+                </div>
+              </div>
 
-        {/* Comments List */}
-        {localComments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No comments yet. Be the first to comment!</p>
-            </div>
-        ) : (
-            <div className="space-y-4 mt-4">
-              {localComments.map((comment) => (
-                  <div key={comment.id} className="bg-secondary/30 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">
-                    {comment.user_id === "current-user" ? "You" : comment.user_id.charAt(0).toUpperCase()}
-                  </span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="font-medium text-sm">
-                            {comment.user_id === "current-user" ? "You" : `User ${comment.user_id.substring(0, 8)}...`}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{getRelativeTime(comment.created_at)}</div>
-                        </div>
-                        <p className="text-sm">{comment.content}</p>
-                      </div>
-                    </div>
+              <div>
+                {comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <CommentItem key={comment.id} comment={comment} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No comments yet. Be the first to comment!
                   </div>
-              ))}
-            </div>
-        )}
-      </div>
-  )
-}
+                )}
+              </div>
 
+              {comments.length > 5 && (
+                <div className="mt-4">
+                  <Button variant="outline" className="w-full">
+                    Load More Comments
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
+}

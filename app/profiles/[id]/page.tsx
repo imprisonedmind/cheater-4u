@@ -22,6 +22,7 @@ import { ProfileHeader } from "@/components/profiles/profile-header";
 import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
 import { isBanned, isLoggedIn } from "@/lib/utils";
 import { getServerSession } from "@/lib/auth/get-server-session";
+import { CommentsSection } from "@/components/comments/comment-section";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -51,6 +52,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <TabsTrigger value="evidence">
                 Evidence ({suspect.evidence_count})
               </TabsTrigger>
+              <TabsTrigger value="comments">Comments ({0})</TabsTrigger>
               {/*TODO:// implement*/}
               {/*<TabsTrigger value="stats">Stats</TabsTrigger>*/}
             </TabsList>
@@ -113,6 +115,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 </CardFooter>
               </Card>
             </TabsContent>
+
+            {/* COMMENTS */}
+            <CommentsSection profileId={suspect.id} />
 
             {/* STATS */}
             {/*TODO:// implement this*/}

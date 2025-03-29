@@ -21,7 +21,7 @@ export async function ProfileHeader({ suspect }: { suspect: Suspect }) {
       />
 
       {/* suspect INFORMATION */}
-      <div className="px-6 pb-6 flex flex-col md:flex-row gap-6 z-[200] items-center">
+      <div className="px-6 pb-6 flex flex-col md:flex-row gap-6 items-center">
         <div className="flex-shrink-0 -mt-14">
           <SteamAvatar
             className={"size-32"}

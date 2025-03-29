@@ -7,4 +7,6 @@ export type Evidence = {
   created_at: string;
   up_votes: number;
   down_votes: number;
+  reporter: string;
+  game?: string;
 };
