@@ -158,7 +158,7 @@ export function CommentItem({
 									parentId={comment.id}
 									profileId={comment.profileId}
 									authorId={comment.author.id}
-									handleCancel={() => handleShowRespond(comment.id)}
+									handleCancelAction={() => handleShowRespond(comment.id)}
 								/>
 							) : (
 								<p
