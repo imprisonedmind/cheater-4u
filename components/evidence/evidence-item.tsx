@@ -16,7 +16,7 @@ interface EvidenceItemProps {
 
 export const EvidenceItem = async ({ evidence }: EvidenceItemProps) => {
   const user = await getServerSession();
-  const reporter = await getEnrichedUser(evidence.reporter);
+  const reporter = await getEnrichedUser({ profileId: evidence.reporter });
 
   return (
     <div className="card bg-secondary/30 p-4 rounded-lg">
@@ -42,11 +42,11 @@ export const EvidenceItem = async ({ evidence }: EvidenceItemProps) => {
         <div className={"flex flex-col gap-2"}>
           <div className="flex items-center gap-2">
             <SteamAvatar
-              src={reporter.steam_summary.avatar_url}
+              src={reporter!.steam_summary.avatar_url}
               className={"size-6"}
             />
             <span className="text-sm font-medium text-primary">
-              {reporter.steam_summary.steam_name}
+              {reporter!.steam_summary.steam_name}
             </span>
           </div>
 

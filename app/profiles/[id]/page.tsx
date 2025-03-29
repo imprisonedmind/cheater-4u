@@ -23,6 +23,7 @@ import RelatedProfilesCard from "@/components/profiles/related-profiles-card";
 import { isBanned, isLoggedIn } from "@/lib/utils";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { CommentsSection } from "@/components/comments/comment-section";
+import { getEnrichedUser } from "@/app/users/actions";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -32,6 +33,10 @@ interface ProfilePageProps {
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const user = await getServerSession();
+  const currentUser = isLoggedIn(user)
+    ? await getEnrichedUser({ steamId64: user.steam_id_64 })
+    : null;
+
   const { id } = await params;
   const suspect = await getSuspect(id);
   const reports = await getUserReports(id);
@@ -52,7 +57,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <TabsTrigger value="evidence">
                 Evidence ({suspect.evidence_count})
               </TabsTrigger>
-              <TabsTrigger value="comments">Comments ({0})</TabsTrigger>
+              <TabsTrigger value="comments">
+                Comments ({suspect.comment_count})
+              </TabsTrigger>
               {/*TODO:// implement*/}
               {/*<TabsTrigger value="stats">Stats</TabsTrigger>*/}
             </TabsList>
@@ -117,7 +124,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </TabsContent>
 
             {/* COMMENTS */}
-            <CommentsSection profileId={suspect.id} />
+            <CommentsSection
+              profileId={suspect.id}
+              currentUserId={currentUser?.id}
+            />
 
             {/* STATS */}
             {/*TODO:// implement this*/}

@@ -169,6 +169,41 @@ export async function getUserReports(profileId: string) {
 }
 
 /**
+ * Gets the comments for a single user
+ * */
+export async function getUserComments(profileId: string) {
+  const query = `
+    comments?select=id,created_at,content,up_votes,down_votes,replies,author_id(
+      id,steam_name,steam_avatar_url
+    )&profile_id=eq.${profileId}&order=created_at.desc
+  `.replace(/\s+/g, "");
+
+  const res = await fetchSupabase({ query });
+
+  if (!res.ok) {
+    console.error("Failed to fetch comments:", await res.text());
+    return [];
+  }
+
+  const data = await res.json();
+
+  return data.map((comment: any) => ({
+    id: comment.id,
+    profileId,
+    createdAt: comment.created_at ? new Date(comment.created_at) : new Date(),
+    content: comment.content,
+    likes: comment.up_votes ?? 0,
+    dislikes: comment.down_votes ?? 0,
+    replies: comment.replies ?? [],
+    author: {
+      id: comment.author_id?.id,
+      name: comment.author_id?.steam_name ?? "Unknown",
+      avatar: comment.author_id?.steam_avatar_url ?? "/placeholder.svg",
+    },
+  }));
+}
+
+/**
  * Enriches a suspect with additional data:
  * - Evidence and report counts.
  * - Steam summary.
@@ -178,8 +213,10 @@ export async function getUserReports(profileId: string) {
 export async function enrichSuspect(suspect: any): Promise<Suspect> {
   const evidence = await getUserEvidence(suspect.id);
   const reports = await getUserReports(suspect.id);
+  const comments = await getUserComments(suspect.id);
   const evidence_count = evidence.length;
   const report_count = reports.length;
+  const comment_count = comments.length;
   const steam_summary = await fetchSteamUserSummary(suspect.steam_id_64);
   const ban_status = await fetchSteamBans(suspect.steam_id_64);
 
@@ -188,6 +225,7 @@ export async function enrichSuspect(suspect: any): Promise<Suspect> {
     ...suspect,
     evidence_count,
     report_count,
+    comment_count,
     steam_summary,
     ban_status,
   });
@@ -196,6 +234,7 @@ export async function enrichSuspect(suspect: any): Promise<Suspect> {
     ...suspect,
     evidence_count,
     report_count,
+    comment_count,
     steam_summary,
     ban_status,
     suspicious_score,
@@ -233,8 +272,7 @@ export async function getSuspect(profileId: String) {
     const response = await fetchSupabase({ query });
     const data = await response.json();
 
-    const suspect: Suspect = await enrichSuspect(data[0]);
-    return await suspect;
+    return await enrichSuspect(data[0]);
   } catch (error) {
     throw error;
   }

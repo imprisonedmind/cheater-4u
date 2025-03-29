@@ -15,6 +15,7 @@ export interface Suspect {
   // Enriched fields:
   report_count?: number;
   evidence_count?: number;
+  comment_count?: number;
   suspicious_score: number;
   steam_summary: SteamSummary;
   ban_status: BanStatus;
