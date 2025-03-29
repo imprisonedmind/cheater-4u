@@ -12,5 +12,6 @@ export interface CommentType {
   createdAt: Date;
   likes: number;
   dislikes: number;
-  replies: CommentType[]; // recursive replies
+  userVote?: "like" | "dislike";
+  replies: CommentType[];
 }

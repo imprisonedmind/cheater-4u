@@ -6,7 +6,7 @@ import { useState } from "react";
 import { SteamAvatar } from "@/components/avatar/reusable-avatar";
 import { VoteButton } from "@/components/button/vote-button";
 import { ReplyForm } from "@/components/comments/reply-form";
-import { deleteComment } from "@/app/comments/actions";
+import { deleteComment, toggleCommentVote } from "@/app/comments/actions";
 import { toast } from "sonner";
 import { CommentType } from "@/lib/types/comment";
 
@@ -21,39 +21,16 @@ export function CommentItem({
   currentUserId,
   refreshCommentsAction,
 }: CommentItemProps) {
-  const [liked, setLiked] = useState(false);
-  const [disliked, setDisliked] = useState(false);
   const [likes, setLikes] = useState(comment.likes);
   const [dislikes, setDislikes] = useState(comment.dislikes);
-  const [respond, setShowRespond] = useState<String | null>(null);
+  const [pendingVote, setPendingVote] = useState<"like" | "dislike" | null>(
+    null,
+  );
+  const [respond, setShowRespond] = useState<string | null>(null);
 
-  const handleLike = () => {
-    if (liked) {
-      setLiked(false);
-      setLikes(likes - 1);
-    } else {
-      setLiked(true);
-      setLikes(likes + 1);
-      if (disliked) {
-        setDisliked(false);
-        setDislikes(dislikes - 1);
-      }
-    }
-  };
-
-  const handleDislike = () => {
-    if (disliked) {
-      setDisliked(false);
-      setDislikes(dislikes - 1);
-    } else {
-      setDisliked(true);
-      setDislikes(dislikes + 1);
-      if (liked) {
-        setLiked(false);
-        setLikes(likes - 1);
-      }
-    }
-  };
+  const effectiveVote = pendingVote ?? comment.userVote;
+  const isLiked = effectiveVote === "like";
+  const isDisliked = effectiveVote === "dislike";
 
   const handleShowRespond = (id: string) => {
     if (!currentUserId) {
@@ -61,11 +38,7 @@ export function CommentItem({
       return;
     }
 
-    if (respond === id) {
-      setShowRespond(null);
-    } else {
-      setShowRespond(id);
-    }
+    setShowRespond((prev) => (prev === id ? null : id));
   };
 
   const handleDelete = async (commentId: string) => {
@@ -75,17 +48,58 @@ export function CommentItem({
     try {
       await deleteComment(commentId);
       toast.success("Comment deleted.");
-      refreshCommentsAction(); // ✅ just re-fetch
+      refreshCommentsAction();
     } catch (err) {
       console.error("Failed to delete comment:", err);
       toast.error("Something went wrong deleting the comment.");
     }
   };
 
-  // Format the date to show "over 1 year ago" style
-  const formattedDate = `over ${formatDistanceToNow(comment.createdAt, { addSuffix: false })} ago`;
+  const handleVote = async (type: "like" | "dislike") => {
+    if (!currentUserId) {
+      toast("Please log in to vote.");
+      return;
+    }
 
-  // Get initials for avatar fallback
+    // Optimistically update UI
+    const alreadyLiked = effectiveVote === "like";
+    const alreadyDisliked = effectiveVote === "dislike";
+
+    if (type === "like") {
+      if (alreadyLiked) {
+        setPendingVote(null);
+        setLikes((prev) => prev - 1);
+      } else {
+        setPendingVote("like");
+        setLikes((prev) => prev + 1);
+        if (alreadyDisliked) setDislikes((prev) => prev - 1);
+      }
+    }
+
+    if (type === "dislike") {
+      if (alreadyDisliked) {
+        setPendingVote(null);
+        setDislikes((prev) => prev - 1);
+      } else {
+        setPendingVote("dislike");
+        setDislikes((prev) => prev + 1);
+        if (alreadyLiked) setLikes((prev) => prev - 1);
+      }
+    }
+
+    try {
+      await toggleCommentVote(comment.id, currentUserId, type);
+    } catch (err) {
+      toast.error("Failed to register vote.");
+    } finally {
+      refreshCommentsAction(); // re-fetch to stay consistent
+    }
+  };
+
+  const formattedDate = `${formatDistanceToNow(comment.createdAt, {
+    addSuffix: false,
+  })} ago`;
+
   const initials = comment.author.name
     .split(/\s/)
     .map((word) => word[0])
@@ -115,28 +129,37 @@ export function CommentItem({
             </div>
           </div>
 
-          <div className={"flex flex-row justify-between"}>
+          <div className="flex flex-row justify-between">
             <p className="text-sm mb-2 w-full whitespace-pre-wrap">
               {comment.content}
             </p>
 
-            <div className={"flex flex-row items-center gap-2"}>
+            <div className="flex flex-row items-center gap-2">
               <VoteButton
-                count={comment.likes}
-                icon={<ThumbsUp className="h-4 w-4" />}
-                aria_label={"UpVote"}
+                count={likes}
+                icon={
+                  <ThumbsUp
+                    className={`h-4 w-4 ${isLiked ? "text-pink-500" : ""}`}
+                  />
+                }
+                aria_label="UpVote"
+                onClick={() => handleVote("like")}
               />
               <VoteButton
-                count={comment.dislikes}
-                icon={<ThumbsDown className="h-4 w-4" />}
-                aria_label={"DownVote"}
+                count={dislikes}
+                icon={
+                  <ThumbsDown
+                    className={`h-4 w-4 ${isDisliked ? "text-red-500" : ""}`}
+                  />
+                }
+                aria_label="DownVote"
+                onClick={() => handleVote("dislike")}
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="mt-4 w-full">
-              {/* Reply form - always show */}
               {currentUserId != null && respond === comment.id ? (
                 <ReplyForm
                   parentId={comment.id}
@@ -147,13 +170,13 @@ export function CommentItem({
                 />
               ) : (
                 <p
-                  className={"text-sm cursor-pointer"}
+                  className="text-sm cursor-pointer"
                   onClick={() => handleShowRespond(comment.id)}
                 >
                   Reply
                 </p>
               )}
-              {/* Reply list */}
+
               {comment.replies.length > 0 && (
                 <div className="space-y-4 pl-4 border-l border-muted">
                   {comment.replies.map((reply) => (

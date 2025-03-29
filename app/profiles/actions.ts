@@ -46,34 +46,71 @@ export async function getUserReports(profileId: string) {
 /**
  * Gets the comments for a single user
  * */
-export async function getUserComments(profileId: string) {
+export async function getUserComments(
+  profileId: string,
+  currentUserId?: string,
+) {
   const query = `
-    comments?select=id,created_at,content,up_votes,down_votes,parent_id,author_id(
+    comments?select=id,created_at,content,parent_id,author_id(
       id,steam_name,steam_avatar_url
     )&profile_id=eq.${profileId}&order=created_at.asc
   `.replace(/\s+/g, "");
 
-  const res = await fetchSupabase({ query, revalidate: 0, cache: "no-cache" });
-
-  if (!res.ok) {
-    console.error("Failed to fetch comments:", await res.text());
+  const commentRes = await fetchSupabase({
+    query,
+    revalidate: 0,
+    cache: "no-cache",
+  });
+  if (!commentRes.ok) {
+    console.error("Failed to fetch comments:", await commentRes.text());
     return [];
   }
 
-  const data = await res.json();
+  const comments = await commentRes.json();
 
-  // Group into threads
+  // Step 2: Fetch votes per comment
+  const voteRes = await fetchSupabase({
+    query: `comment_votes?select=comment_id,vote_type,user_id&comment_id=in.(${comments
+      .map((c: any) => c.id)
+      .join(",")})`,
+    cache: "no-cache",
+    revalidate: 0,
+  });
+
+  const allVotes: Array<{
+    comment_id: string;
+    user_id: string;
+    vote_type: "like" | "dislike";
+  }> = voteRes.ok ? await voteRes.json() : [];
+
+  // Build a lookup: commentId => votes[]
+  const voteMap = new Map<
+    string,
+    { likes: number; dislikes: number; userVote?: "like" | "dislike" }
+  >();
+  for (const comment of comments) {
+    const votes = allVotes.filter((v) => v.comment_id === comment.id);
+    const likes = votes.filter((v) => v.vote_type === "like").length;
+    const dislikes = votes.filter((v) => v.vote_type === "dislike").length;
+    const userVote = votes.find((v) => v.user_id === currentUserId)?.vote_type;
+    voteMap.set(comment.id, { likes, dislikes, userVote });
+  }
+
+  // Step 3: Threadify and map into CommentType
   const topLevel: CommentType[] = [];
   const map = new Map<number, CommentType>();
 
-  for (const comment of data) {
+  for (const comment of comments) {
+    const votes = voteMap.get(comment.id) ?? { likes: 0, dislikes: 0 };
+
     const transformed: CommentType = {
       id: comment.id,
       profileId,
       createdAt: comment.created_at ? new Date(comment.created_at) : new Date(),
       content: comment.content,
-      likes: comment.up_votes ?? 0,
-      dislikes: comment.down_votes ?? 0,
+      likes: votes.likes,
+      dislikes: votes.dislikes,
+      userVote: votes.userVote,
       replies: [],
       author: {
         id: comment.author_id?.id,
@@ -91,7 +128,6 @@ export async function getUserComments(profileId: string) {
       if (parent) {
         parent.replies.push(transformed);
       } else {
-        // orphaned reply — fallback to top-level
         topLevel.push(transformed);
       }
     }

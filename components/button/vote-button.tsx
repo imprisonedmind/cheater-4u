@@ -6,6 +6,7 @@ interface VoteButtonProps {
   icon: ReactNode;
   aria_label: string;
   className?: string;
+  onClick?: () => void;
 }
 
 export const VoteButton: FC<VoteButtonProps> = ({
@@ -13,9 +14,11 @@ export const VoteButton: FC<VoteButtonProps> = ({
   icon,
   aria_label,
   className,
+  onClick,
 }) => {
   return (
     <button
+      onClick={onClick}
       className="flex items-center text-sm hover:text-primary gap-1 cursor-pointer group"
       // onClick={() => onVote(evidence.id, "up")}
       aria-label={aria_label}
