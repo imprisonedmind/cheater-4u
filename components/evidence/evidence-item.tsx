@@ -27,15 +27,17 @@ export const EvidenceItem = async ({ evidence }: EvidenceItemProps) => {
           game={evidence.game}
         />
         <EvidenceThumbnail evidence={evidence} />
-        <a
-          href={evidence.evidence_url ?? "#"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center text-primary hover:underline text-xs"
-        >
-          <ExternalLink className="mr-1 h-3 w-3" />
-          <span>{evidence.evidence_url}</span>
-        </a>
+        {evidence.evidence_url !== null && (
+          <a
+            href={evidence.evidence_url ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center text-primary hover:underline text-xs"
+          >
+            <ExternalLink className="mr-1 h-3 w-3" />
+            <span>{evidence.evidence_url}</span>
+          </a>
+        )}
       </div>
 
       <div className={"flex justify-between p-2 mt-4"}>

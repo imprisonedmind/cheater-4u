@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import ReportFormClient from "@/components/forms/new-client-report";
-import { submitProfileReportAction } from "@/app/profiles/actions";
+import { submitProfileReportAction } from "@/app/reports/actions";
 
 export default function ReportPageClient() {
   const router = useRouter();
