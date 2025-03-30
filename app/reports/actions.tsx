@@ -114,3 +114,15 @@ export async function submitProfileReportAction(formData: FormData) {
     throw new Error(err.message ?? "Unexpected server error");
   }
 }
+
+/**
+ * Get the total report Count
+ * */
+export async function getReportCount(): Promise<number> {
+  const query = "reports?select=id";
+  const res = await fetchSupabase({ query });
+
+  if (!res.ok) throw new Error("Failed to fetch reports");
+  const data = await res.json();
+  return data.length;
+}

@@ -2,6 +2,7 @@
 import { parseEvidenceFields } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/utils/supabase/server";
+import { fetchSupabase } from "@/lib/utils/supabase/helpers/supabase-fetch-helper";
 
 /**
  * Inserts a new row into the `evidence` table.
@@ -47,4 +48,16 @@ export async function submitEvidenceAction(
   revalidatePath(`/profiles/${profileId}`);
 
   return { success: true };
+}
+
+/**
+ * Get the total evidence count
+ * */
+export async function getEvidenceCount(): Promise<number> {
+  const query = "evidence?select=id";
+  const res = await fetchSupabase({ query });
+
+  if (!res.ok) throw new Error("Failed to fetch evidence");
+  const data = await res.json();
+  return data.length;
 }
