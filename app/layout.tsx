@@ -9,7 +9,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Cheater4U",
+  title: "SusWatch",
   description: "Track and report suspected cheaters.",
 };
 

@@ -3,7 +3,8 @@ import Link from "next/link";
 import { ArrowRight, Search, Shield, Users } from "lucide-react";
 import Image from "next/image";
 import { FeatureCard } from "@/components/card/feature-card";
-import hero from "@/public/png/hero_5.png";
+import hero from "@/public/png/hero_13.png";
+import SusWatchBento from "@/components/bento/grid-bento";
 
 export default function Home() {
   const features = [
@@ -34,15 +35,15 @@ export default function Home() {
   return (
     <div className=" min-h-screen  ">
       {/* Hero background image with gradient overlay */}
-      <div className="absolute top-0 left-0 inset-0 h-[1300px] w-full">
+      <div className="absolute top-0 left-0 inset-0 h-[1100px] w-full">
         <Image
           src={hero}
           placeholder={"blur"}
           alt="cheater4u.co.za hero image - detective catching wall hacker"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover scale-x-[-1]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/0" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/0" />
       </div>
 
       <div className="relative space-y-8">
@@ -51,10 +52,11 @@ export default function Home() {
             <div className="max-w-3xl">
               <div className="space-y-4">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                  Track and Report Suspected Cheaters
+                  Track and Report <br />
+                  <span className={"text-orange-500"}>Suspected</span> Cheaters
                 </h1>
                 <p className="text-zinc-400 md:text-xl max-w-[600px]">
-                  Cheater4U provides the most advanced tools to identify, track,
+                  SusWatch provides the most advanced tools to identify, track,
                   and report suspected cheaters in your favorite games.
                 </p>
               </div>
@@ -62,10 +64,10 @@ export default function Home() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-green-500 hover:bg-green-600 text-black"
+                  className="bg-orange-500 hover:bg-orange-600 text-black"
                 >
                   <Link href="/profiles">
-                    Browse Profiles
+                    Browse Suspects
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -98,6 +100,12 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <div className={"container px-8 py-24"}>
+          <div className={"h-[1px] bg-secondary"} />
+        </div>
+
+        <SusWatchBento />
       </div>
     </div>
   );

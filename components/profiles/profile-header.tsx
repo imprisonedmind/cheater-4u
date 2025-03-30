@@ -1,14 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Flag, Share2 } from "lucide-react";
+import { Flag, Share2, Swords } from "lucide-react";
 import { StatusBackground } from "@/components/profiles/profile-header-background";
 import { SteamAvatar } from "@/components/avatar/reusable-avatar";
 import { Suspect } from "@/lib/types/suspect";
-import { isBanned, isLoggedIn } from "@/lib/utils";
+import { isAuthoritative, isBanned, isLoggedIn } from "@/lib/utils";
 import { getServerSession } from "@/lib/auth/get-server-session";
+import { toggleCheaterStatus } from "@/app/users/actions";
+import { ClientMarkAsCheater } from "@/components/button/client-mark-as-cheater";
 
 export async function ProfileHeader({ suspect }: { suspect: Suspect }) {
   const user = await getServerSession();
+  console.log(user);
+  const isAuthorized = isAuthoritative(user);
 
   return (
     <Card className="overflow-hidden p-0">
@@ -58,6 +62,8 @@ export async function ProfileHeader({ suspect }: { suspect: Suspect }) {
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
+
+          <ClientMarkAsCheater isAuthorized={isAuthorized} suspect={suspect} />
         </div>
       </div>
     </Card>

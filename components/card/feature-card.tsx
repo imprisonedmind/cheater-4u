@@ -21,8 +21,8 @@ export function FeatureCard({
   return (
     <div className="flex flex-col h-full rounded-lg bg-black/40 backdrop-blur-sm border border-zinc-800 overflow-hidden">
       <div className="flex-1 p-6">
-        <div className="mb-6 p-4 bg-green-500/5 rounded-xl w-fit">
-          <Icon className="h-12 w-12 text-green-400" />
+        <div className="mb-6 p-4 bg-orange-500/5 rounded-xl w-fit">
+          <Icon className="h-12 w-12 text-orange-400" />
         </div>
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="text-zinc-400 text-sm">{description}</p>
@@ -31,7 +31,7 @@ export function FeatureCard({
         <Button
           variant="ghost"
           asChild
-          className="w-full justify-between hover:bg-zinc-800 hover:text-green-400 group"
+          className="w-full justify-between hover:bg-zinc-800 hover:text-orange-400 group"
         >
           <Link href={linkHref}>
             {linkText}

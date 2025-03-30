@@ -133,3 +133,13 @@ export const revalidate_time = 1800;
 export function isLoggedIn(user: Partial<SessionUser>): user is SessionUser {
   return Boolean(user?.steam_id_64);
 }
+
+/**
+ * Helper to let us know if someone is actually Authoritative
+ * */
+export function isAuthoritative(
+  user: { role?: string } | null | undefined,
+): boolean {
+  if (!user || !user.role) return false;
+  return user.role === "admin" || user.role === "mod";
+}

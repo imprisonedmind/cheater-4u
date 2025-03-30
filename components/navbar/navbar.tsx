@@ -21,7 +21,7 @@ export async function Navbar() {
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold text-lg text-primary">
-              Cheater<span className={"text-green-500"}>4U</span>
+              SUS<span className={"text-orange-500"}>WATCH</span>
             </span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
@@ -30,7 +30,7 @@ export async function Navbar() {
               href="/profiles"
               className="transition-colors hover:text-primary"
             >
-              Profiles
+              Suspects
             </Link>
             <Link
               prefetch={true}

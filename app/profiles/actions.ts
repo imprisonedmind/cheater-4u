@@ -201,7 +201,10 @@ export async function getSuspect(profileId: String) {
   try {
     // Filter profiles by the given profileId
     const query = `profiles?select=*&id=eq.${profileId}`;
-    const response = await fetchSupabase({ query });
+    const response = await fetchSupabase({
+      query,
+      tags: [`profile-${profileId}`],
+    });
     const data = await response.json();
 
     return await enrichSuspect(data[0]);

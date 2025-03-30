@@ -16,7 +16,7 @@ export function getStatusBadge({
     return <Badge variant="banned">Banned</Badge>;
   }
   if (suspicious_score >= 70) {
-    return <Badge variant="outline">Suspicious</Badge>;
+    return <Badge variant="secondary">Suspicious</Badge>;
   }
-  return <Badge variant="secondary">Active</Badge>;
+  return <Badge variant="outline">Investigation</Badge>;
 }
