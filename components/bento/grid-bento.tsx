@@ -69,7 +69,7 @@ export default function SusWatchBento() {
 
               {/* Percentage indicators */}
               <div className="flex justify-between items-end mt-auto mb-6">
-                <div className="text-3xl font-bold">95%</div>
+                <div className="text-3xl font-bold">0%</div>
                 <div className="text-3xl font-bold text-orange-400">99%</div>
               </div>
 

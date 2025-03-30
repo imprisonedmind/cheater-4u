@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
       <body
         className={cn(
           inter.className,
