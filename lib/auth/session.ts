@@ -13,7 +13,7 @@ export interface SessionUser {
 
 export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
-  cookieName: "cheater4u-session",
+  cookieName: "suswatch-session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",
   },

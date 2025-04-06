@@ -39,7 +39,7 @@ export default function Home() {
         <Image
           src={hero}
           placeholder={"blur"}
-          alt="cheater4u.co.za hero image - detective catching wall hacker"
+          alt="sus.watch hero image - detective catching wall hacker"
           className="h-full w-full object-cover scale-x-[-1]"
           priority
         />
