@@ -30,13 +30,17 @@ export async function upsertComment({
   try {
     const [created] = await mutateSupabase({
       method: "POST",
-      query: "comments",
+      query: "comments?select=id",
       body,
       prefer: "return=representation",
     });
 
+    if (!created?.id) {
+      throw new Error("Comment creation returned no id");
+    }
+
     revalidateTag(`comment-${profileId}`);
-    return created;
+    return created as { id: string };
   } catch (err) {
     console.error("Failed to create comment:", err);
     throw new Error("Comment creation failed");

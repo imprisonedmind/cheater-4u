@@ -100,13 +100,6 @@ export function CommentItem({
     addSuffix: false,
   })} ago`;
 
-  const initials = comment.author.name
-    .split(/\s/)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase()
-    .substring(0, 2);
-
   return (
     <div className="py-4 border-t border-border first:border-t-0">
       <div className="flex gap-3">
