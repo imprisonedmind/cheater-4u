@@ -4,8 +4,14 @@ import { getEvidenceCount } from "@/app/evidence/actions";
 
 export default async function MiddleSection() {
   const [reportCount, evidenceCount] = await Promise.all([
-    getReportCount(),
-    getEvidenceCount(),
+    getReportCount().catch((error) => {
+      console.error("Failed to load report count:", error);
+      return 0;
+    }),
+    getEvidenceCount().catch((error) => {
+      console.error("Failed to load evidence count:", error);
+      return 0;
+    }),
   ]);
 
   const confidenceScore = Math.min(100, Math.floor(reportCount * 5));
